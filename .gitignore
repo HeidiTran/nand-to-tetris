@@ -1,0 +1,4 @@
+tools/
+
+# Ignore all output files
+*.out
