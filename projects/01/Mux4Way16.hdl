@@ -16,5 +16,52 @@ CHIP Mux4Way16 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+	Mux (a = a[0], b = b[0], sel = sel[0], out = a0b0);
+	Mux (a = c[0], b = d[0], sel = sel[0], out = c0d0);
+	Mux (a = a0b0, b = c0d0, sel = sel[1], out = out[0]);
+	Mux (a = a[1], b = b[1], sel = sel[0], out = a1b1);
+	Mux (a = c[1], b = d[1], sel = sel[0], out = c1d1);
+	Mux (a = a1b1, b = c1d1, sel = sel[1], out = out[1]);
+	Mux (a = a[2], b = b[2], sel = sel[0], out = a2b2);
+	Mux (a = c[2], b = d[2], sel = sel[0], out = c2d2);
+	Mux (a = a2b2, b = c2d2, sel = sel[1], out = out[2]);
+	Mux (a = a[3], b = b[3], sel = sel[0], out = a3b3);
+	Mux (a = c[3], b = d[3], sel = sel[0], out = c3d3);
+	Mux (a = a3b3, b = c3d3, sel = sel[1], out = out[3]);
+	Mux (a = a[4], b = b[4], sel = sel[0], out = a4b4);
+	Mux (a = c[4], b = d[4], sel = sel[0], out = c4d4);
+	Mux (a = a4b4, b = c4d4, sel = sel[1], out = out[4]);
+	Mux (a = a[5], b = b[5], sel = sel[0], out = a5b5);
+	Mux (a = c[5], b = d[5], sel = sel[0], out = c5d5);
+	Mux (a = a5b5, b = c5d5, sel = sel[1], out = out[5]);
+	Mux (a = a[6], b = b[6], sel = sel[0], out = a6b6);
+	Mux (a = c[6], b = d[6], sel = sel[0], out = c6d6);
+	Mux (a = a6b6, b = c6d6, sel = sel[1], out = out[6]);
+	Mux (a = a[7], b = b[7], sel = sel[0], out = a7b7);
+	Mux (a = c[7], b = d[7], sel = sel[0], out = c7d7);
+	Mux (a = a7b7, b = c7d7, sel = sel[1], out = out[7]);
+	Mux (a = a[8], b = b[8], sel = sel[0], out = a8b8);
+	Mux (a = c[8], b = d[8], sel = sel[0], out = c8d8);
+	Mux (a = a8b8, b = c8d8, sel = sel[1], out = out[8]);
+	Mux (a = a[9], b = b[9], sel = sel[0], out = a9b9);
+	Mux (a = c[9], b = d[9], sel = sel[0], out = c9d9);
+	Mux (a = a9b9, b = c9d9, sel = sel[1], out = out[9]);
+	Mux (a = a[10], b = b[10], sel = sel[0], out = a10b10);
+	Mux (a = c[10], b = d[10], sel = sel[0], out = c10d10);
+	Mux (a = a10b10, b = c10d10, sel = sel[1], out = out[10]);
+	Mux (a = a[11], b = b[11], sel = sel[0], out = a11b11);
+	Mux (a = c[11], b = d[11], sel = sel[0], out = c11d11);
+	Mux (a = a11b11, b = c11d11, sel = sel[1], out = out[11]);
+	Mux (a = a[12], b = b[12], sel = sel[0], out = a12b12);
+	Mux (a = c[12], b = d[12], sel = sel[0], out = c12d12);
+	Mux (a = a12b12, b = c12d12, sel = sel[1], out = out[12]);
+	Mux (a = a[13], b = b[13], sel = sel[0], out = a13b13);
+	Mux (a = c[13], b = d[13], sel = sel[0], out = c13d13);
+	Mux (a = a13b13, b = c13d13, sel = sel[1], out = out[13]);
+	Mux (a = a[14], b = b[14], sel = sel[0], out = a14b14);
+	Mux (a = c[14], b = d[14], sel = sel[0], out = c14d14);
+	Mux (a = a14b14, b = c14d14, sel = sel[1], out = out[14]);
+	Mux (a = a[15], b = b[15], sel = sel[0], out = a15b15);
+	Mux (a = c[15], b = d[15], sel = sel[0], out = c15d15);
+	Mux (a = a15b15, b = c15d15, sel = sel[1], out = out[15]);
 }
