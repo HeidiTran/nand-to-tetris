@@ -13,5 +13,24 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    // Put you code here:
+    Xor (a = b, b = c, out = bXorc);
+	Not (in = bXorc, out = bNotXorc);
+	Mux (a = bXorc, b = bNotXorc, sel = a, out = sum);
+	
+	And (a = b, b = c, out = bAndc);
+	Or (a = b, b = c, out = bOrc);
+	Mux (a = bAndc, b = bOrc, sel = a, out = carry);
 }
+
+/**
+ * FullAdder Truth table
+ * |   a   |   b   |   c   |  sum  | carry |
+ * |   0   |   0   |   0   |   0   |   0   |
+ * |   0   |   0   |   1   |   1   |   0   |
+ * |   0   |   1   |   0   |   1   |   0   |
+ * |   0   |   1   |   1   |   0   |   1   |
+ * |   1   |   0   |   0   |   1   |   0   |
+ * |   1   |   0   |   1   |   0   |   1   |
+ * |   1   |   1   |   0   |   0   |   1   |
+ * |   1   |   1   |   1   |   1   |   1   |
+ */
