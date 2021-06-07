@@ -13,13 +13,9 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    Xor (a = b, b = c, out = bXorc);
-	Not (in = bXorc, out = bNotXorc);
-	Mux (a = bXorc, b = bNotXorc, sel = a, out = sum);
-	
-	And (a = b, b = c, out = bAndc);
-	Or (a = b, b = c, out = bOrc);
-	Mux (a = bAndc, b = bOrc, sel = a, out = carry);
+    HalfAdder(a = a, b = b, sum = aPlusb, carry = carryab);
+	HalfAdder (a = aPlusb, b = c, sum = sum, carry = carrybc);
+	Or (a = carryab, b = carrybc, out = carry);
 }
 
 /**
@@ -33,4 +29,15 @@ CHIP FullAdder {
  * |   1   |   0   |   1   |   0   |   1   |
  * |   1   |   1   |   0   |   0   |   1   |
  * |   1   |   1   |   1   |   1   |   1   |
+ */
+ 
+/**
+ * Another solution:
+ * Xor (a = b, b = c, out = bXorc);
+ * Not (in = bXorc, out = bNotXorc);
+ * Mux (a = bXorc, b = bNotXorc, sel = a, out = sum);
+ * 
+ * And (a = b, b = c, out = bAndc);
+ * Or (a = b, b = c, out = bOrc);
+ * Mux (a = bAndc, b = bOrc, sel = a, out = carry);
  */
