@@ -15,6 +15,14 @@ CHIP PC {
     IN in[16],load,inc,reset;
     OUT out[16];
 
-    PARTS:
-    // Put your code here:
+    PARTS:	
+	Register (in = finalIn, load = true, out = out, out = prevOut);
+	
+	// These are to figure out what to feed as input in the next clock cycle
+	// The order of these Mux is inc-load-reset to achieve the else if behavior
+	// of reset-load-inc described above
+	Inc16 (in = prevOut, out = prevOutInc);
+	Mux16 (a = prevOut, b = prevOutInc, sel = inc, out = tmp0);
+	Mux16 (a = tmp0, b = in, sel = load, out = tmp1);
+	Mux16 (a = tmp1, b = false, sel = reset, out = finalIn);
 }
