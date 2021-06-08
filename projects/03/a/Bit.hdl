@@ -14,5 +14,9 @@ CHIP Bit {
     OUT out;
 
     PARTS:
-    // Put your code here:
+	// Unset pin `outMux` will default to 0 on first run
+	DFF (in = outMux, out = outDFF, out = out);
+	Mux (a = outDFF, b = in, sel = load, out = outMux);
 }
+
+
