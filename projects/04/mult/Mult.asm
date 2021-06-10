@@ -9,4 +9,58 @@
 // This program only needs to handle arguments that satisfy
 // R0 >= 0, R1 >= 0, and R0*R1 < 32768.
 
-// Put your code here.
+// Pseudo code:
+//
+// a = R0
+// b = R1
+// res = 0
+//  
+// LOOP: 
+//		if b == 0 goto STOP
+//		res += a
+//		b -= 1
+//		goto LOOP
+// STOP:
+//  	R2 = res
+// END:
+//		goto END 
+
+   @R0
+   D = M
+   @a 
+   M = D	// a = R0
+   
+   @R1
+   D = M
+   @b 
+   M = D	// b = R1
+   
+   @res 
+   M = 0	// res = 0
+   
+(LOOP)
+   @b 
+   D = M 
+   @STOP 
+   D;JEQ	// if b == 0 goto STOP 
+   
+   @a 
+   D = M 
+   @res 
+   M = M + D	// res += a 
+   
+   @b 
+   M = M - 1	// b -= 1
+   
+   @LOOP
+   0;JMP
+   
+(STOP)
+   @res 
+   D = M
+   @R2
+   M = D   
+   
+(END)
+   @END
+   0;JMP 
