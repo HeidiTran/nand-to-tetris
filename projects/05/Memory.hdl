@@ -27,5 +27,24 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+	/*
+	 * if (address[14] == 0) {
+	 *  	accessing RAM
+	 * } else {
+	 * 	 if (address[13] == 0) {
+	 * 		accessing Screen
+	 * 	 } else {
+	 * 		accessing keyboard
+	 * 	 }
+	 * }
+	 */
+	DMux (in = load, sel = address[14], a = loadRAM, b = loadScreen);
+    RAM16K (in = in, load = loadRAM, address = address[0..13], out = outRAM);
+	Screen (in = in, load = loadScreen, address = address[0..12], out = outScreen);
+	
+	// Use Keyboard chip instead of Register 
+	// Keyboard chip comes with side-effect of showing the keyboard in the simulator
+	Keyboard (out = outKBD);	
+	
+	Mux4Way16 (a = outRAM, b = outRAM, c = outScreen, d = outKBD, sel = address[13..14], out = out);
 }
