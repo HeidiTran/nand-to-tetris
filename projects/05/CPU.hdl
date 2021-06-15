@@ -39,5 +39,70 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+    
+	/* op-code: instruction[15] 
+	 * a: instruction[12]
+     * comp bits: instruction[6..11]	
+	 * d1: instruction[5]
+	 * d2: instruction[4]
+	 * d3: instruction[3]
+	 * jump bits: instruction[0..2]
+	 */
+	
+	Mux16 (a = instruction, b = outALU, sel = instruction[15], out = inA);
+	
+	Not (in = instruction[15], out = isAInstruction);
+	Or (a = isAInstruction, b = instruction[5], out = aBit);
+	
+	// out of ARegister is 16 bits
+	ARegister (in = inA, load = aBit, out = outA, out[0..14] = addressM);
+	Mux16 (a = outA, b = inM, sel = instruction[12], out = inALU);
+	
+	And (a = instruction[4], b = instruction[15], out = loadD);
+	DRegister (in = outALU, load = loadD, out = outD);
+	
+	ALU (x = outD, y = inALU, zx = instruction[11], nx = instruction[10], zy = instruction[9], ny = instruction[8], f = instruction[7], no = instruction[6], out = outALU, zr = zr, ng = ng);
+	
+	And (a = instruction[15], b = instruction[3], out = willWriteM, out = writeM);
+	Mux16 (a = false, b = outALU, sel = willWriteM, out = outM);
+
+	/*	
+	 * null 000 -> load = false 
+	 * JGT 001 if out > 0 <---> zr == 0 && ng == 0
+	 * JEQ 010 if out = 0 <---> zr == 1
+	 * JGE 011 if out >= 0 <---> zr == 1 || ng == 0
+	 * JLT 100 if out < 0  <---> ng == 1
+	 * JNE 101 if out != 0 <---> zr == 0
+	 * JLE 110 if out <= 0 <---> zr == 1 || ng == 1
+	 * JMP 111 -> load = true
+	 */	
+ 
+	DMux8Way (in = true, sel = instruction[0..2], a = noJump, b = JGT, c = JEQ, d = JGE, e = JLT, f = JNE, g = JLE, h = clause0); 
+
+	Not (in = true, out = clause1);
+	Not (in = zr, out = notzr);
+	Not (in = ng, out = notng);
+	And (a = notzr, b = notng, out = sub1);
+	And (a = JGT, b = sub1, out = clause2);
+	And (a = JEQ, b = zr, out = clause3);
+	Or (a = zr, b = notng, out = zrOrNotng);
+	And (a = JGE, b = zrOrNotng, out = clause4);
+	And (a = JLT, b = ng, out = clause5);
+	And (a = JNE, b = notzr, out = clause6);
+	Or (a = zr, b = ng, out = zrOrng);
+	And (a = JLE, b = zrOrng, out = clause7);
+	
+	Or (a = clause0, b = clause1, out = t1);
+	Or (a = t1, b = clause2, out = t2);
+	Or (a = t2, b = clause3, out = t3);
+	Or (a = t3, b = clause4, out = t4);
+	Or (a = t4, b = clause5, out = t5);
+	Or (a = t5, b = clause6, out = t6);
+	Or (a = t6, b = clause7, out = isLoadBitSet);
+	
+	// If is instruction-A, no jump should be performed
+	And (a = instruction[15], b = isLoadBitSet, out = loadA);
+	
+	// out of PC is 16 bits	
+	PC (in = outA, load = loadA, inc = true, reset = reset, out[0..14] = pc);
 }
