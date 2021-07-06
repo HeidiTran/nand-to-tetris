@@ -71,3 +71,7 @@ where *value* is either a constant or a symbol referring to such a constant
 # Language Convention
 - SCREEN: base address of the screen memory map (16,384)
 - KBD: address of the keyboard memory map (24,576)
+
+# Architecture
+Check out `./Architecture.svg` to zoom into details
+![](./Architecture.svg)
