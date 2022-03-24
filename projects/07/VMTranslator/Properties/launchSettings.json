@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "VMTranslator": {
+      "commandName": "Project",
+      "commandLineArgs": "BasicTest.vm"
+    }
+  }
+}
