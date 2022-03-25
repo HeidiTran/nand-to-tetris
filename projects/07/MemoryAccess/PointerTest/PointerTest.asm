@@ -8,8 +8,7 @@
    M=M+1
 // pop pointer 0
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @THIS
    M=D
@@ -23,8 +22,7 @@
    M=M+1
 // pop pointer 1
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @THAT
    M=D
@@ -44,8 +42,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -66,8 +63,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -90,8 +86,7 @@
    M=M+1
 // add
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M+D
@@ -108,8 +103,7 @@
    M=M+1
 // sub
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M-D
@@ -126,8 +120,7 @@
    M=M+1
 // add
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M+D

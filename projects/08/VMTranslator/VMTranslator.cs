@@ -7,11 +7,10 @@
 			// string vmFilePath = args[0];
 
 			// For debugging in VisualStudio
-			//string t = "BasicLoop";
-			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\ProgramFlow\" + t + @"\" + t + ".vm";
+			string t = "SimpleFunction";
+			string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
 
-			string t = "StackTest";
-			string vmFilePath = @"C:\Projects\nand-to-tetris\projects\07\StackArithmetic\" + t + @"\" + t + ".vm";
+			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\07\MemoryAccess\" + t + @"\" + t + ".vm";
 			////////////////////////////////
 
 			// VMTranslator.exe BasicTest.vm
@@ -42,15 +41,19 @@
 						codeWriter.WriteLabel(parser.GetArg1());
 						break;
 					case CommandType.C_GOTO:
+						codeWriter.WriteGoto(parser.GetArg1());
 						break;
 					case CommandType.C_IF:
 						codeWriter.WriteIf(parser.GetArg1());
 						break;
 					case CommandType.C_FUNCTION:
+						codeWriter.WriteFunction(parser.GetArg1(), parser.GetArg2());
 						break;
 					case CommandType.C_RETURN:
+						codeWriter.WriteReturn();
 						break;
 					case CommandType.C_CALL:
+						codeWriter.WriteCall(parser.GetArg1(), parser.GetArg2());
 						break;
 					default:
 						break;

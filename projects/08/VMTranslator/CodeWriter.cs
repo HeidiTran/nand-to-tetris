@@ -21,6 +21,30 @@ namespace VMTranslator
 			{ "temp", "5" },        // temp is mapped on RAM locations 5 - 12
 		};
 
+		private enum Symbol
+		{
+			SP,
+			LCL,
+			ARG,
+			THIS,
+			THAT,
+			R13,
+			R14,
+			R15
+		}
+
+		private const string _true = "-1";
+		private const string _false = "0";
+
+		private enum CallerFrame
+		{
+			ReturnAddress,
+			SavedLCL,
+			SavedARG,
+			SavedTHIS,
+			SavedTHAT
+		};
+
 		private int Counter { get; set; }
 
 		public CodeWriter(string vmFilePath)
@@ -124,13 +148,19 @@ namespace VMTranslator
 			PopFromStackToDReg();
 			WriteIns("A=A-1");
 			WriteIns("D=M-D");
+
+			// If
 			WriteIns("@IF_" + counterStr);
 			WriteIns("D;" + jumpCond);
-			WriteIns("D=0");
+
+			// Else
+			WriteIns("D=" + _false);
+
+			// Finally
 			WriteIns("@FINALLY_" + counterStr);
 			WriteIns("0;JMP");
 			WriteLblIns("(IF_" + counterStr + ")");
-			WriteIns("D=-1");
+			WriteIns("D=" + _true);
 			WriteLblIns("(FINALLY_" + counterStr + ")");
 			UpdateStackTopValTo("D");
 			Counter++;
@@ -173,11 +203,11 @@ namespace VMTranslator
 				// *SP = THIS/THAT, SP++
 				if (index == 0)
 				{
-					WriteIns("@THIS");
+					SelectReg(Symbol.THIS);
 				}
 				else
 				{
-					WriteIns("@THAT");
+					SelectReg(Symbol.THAT);
 				}
 
 				WriteIns("D=M");   // D = THIS/THAT
@@ -185,7 +215,7 @@ namespace VMTranslator
 			}
 			else if (segment == "static")
 			{
-				WriteIns("@" + FileName + "." + index.ToString());
+				WriteIns("@" + FileName + "." + index.ToString());	// xxx.i
 				WriteIns("D=M");
 				PushDRegToStack();
 			}
@@ -212,10 +242,10 @@ namespace VMTranslator
 
 		private void PushDRegToStack()
 		{
-			WriteIns("@SP");   // *SP = D
+			SelectReg(Symbol.SP);   // *SP = D
 			WriteIns("A=M");
 			WriteIns("M=D");
-			WriteIns("@SP");   // SP++
+			SelectReg(Symbol.SP);   // SP++
 			WriteIns("M=M+1");
 		}
 
@@ -225,23 +255,19 @@ namespace VMTranslator
 			{
 				// SP--, THIS/THAT = *SP
 				PopFromStackToDReg();
-
 				if (index == 0)
 				{
-					WriteIns("@THIS");
+					SetRegToDReg(Symbol.THIS);
 				}
 				else
 				{
-					WriteIns("@THAT");
+					SetRegToDReg(Symbol.THAT);
 				}
-
-				WriteIns("M=D");
 			}
 			else if (segment == "static")
 			{
 				PopFromStackToDReg();
-				WriteIns("@" + FileName + "." + index.ToString());
-				WriteIns("M=D");
+				SetRegToDReg(FileName + "." + index.ToString());
 			}
 			else
 			{
@@ -260,21 +286,22 @@ namespace VMTranslator
 					WriteIns("D=M+D");
 				}
 
-				WriteIns("@R13");      // RAM[13] = segmentPointer + i
-				WriteIns("M=D");
+				SetRegToDReg(Symbol.R13);   // RAM[13] = segmentPointer + i
 				PopFromStackToDReg();
-				WriteIns("@R13");      // addr = RAM[13]
+				SelectReg(Symbol.R13);      // addr = RAM[13]
 				WriteIns("A=M");
 				WriteIns("M=D");
 			}
 		}
 
+		/// <summary>
+		/// D = pop()
+		/// </summary>
 		private void PopFromStackToDReg()
 		{
-			WriteIns("@SP");   // SP--
-			WriteIns("M=M-1");
-			WriteIns("A=M");   // D = *SP
-			WriteIns("D=M");
+			SelectReg(Symbol.SP);   // SP--
+			WriteIns("AM=M-1");
+			WriteIns("D=M");        // D = *SP
 		}
 
 		/// <summary>
@@ -288,12 +315,13 @@ namespace VMTranslator
 
 		/// <summary>
 		/// Writes assembly code that effects the goto command
-		/// `goto label` jumps to execute the command just after `label`
+		/// `goto label` jumps to execute the command just after `label` -> unconditional branching
 		/// </summary>
 		/// <param name="label">the label to go to</param>
 		public void WriteGoto(string label)
 		{
-			// TODO
+			WriteIns("@" + label);
+			WriteIns("0;JMP");
 		}
 
 		/// <summary>
@@ -306,17 +334,24 @@ namespace VMTranslator
 		{
 			PopFromStackToDReg();
 			WriteIns("@" + label);
-			WriteIns("D;JNE");		// If true = not equal to 0
+			WriteIns("D;JNE");      // If true = not equal to 0
 		}
 
 		/// <summary>
 		/// Write assembly code that effects the `function` command
 		/// </summary>
 		/// <param name="functionName">name of the function</param>
-		/// <param name="numVars">number of params</param>
+		/// <param name="numVars">number of local variables inside the function</param>
 		public void WriteFunction(string functionName, int numVars)
 		{
-			// TODO
+			WriteLblIns("(" + functionName + ")");	
+
+			// Initialize the local memory segment to all 0s
+			WriteIns("D=0");
+			for (int i = 0; i < numVars; i++)
+			{
+				PushDRegToStack();
+			}
 		}
 
 		/// <summary>
@@ -334,12 +369,96 @@ namespace VMTranslator
 		/// </summary>
 		public void WriteReturn()
 		{
-			// TODO
+			int callerFrameLen = Enum.GetValues(typeof(CallerFrame)).Length;
+
+			// --- Move the return value to the caller ---
+			SelectReg(Symbol.LCL);   // endFrame = RAM[13] = LCL
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.R13);
+
+			// We need to saved retAddr else for function with no arg, *arg = pop() will override the return address
+			SetDRegToInt(callerFrameLen);   // retAddr = RAM[14] = *(endFrame - 5)
+			SelectReg(Symbol.R13);
+			WriteIns("A=M-D");		
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.R14);
+
+			// Repositions the return value currently at the top of stack to `arg 0` location for the caller
+			PopFromStackToDReg();
+			SelectReg(Symbol.ARG);   // *ARG = pop() 
+			WriteIns("A=M");
+			WriteIns("M=D");
+			// -----------------------------------------
+
+			// --- Reinstates the caller's state ---
+			SelectReg(Symbol.ARG);   // Repositions SP of the caller
+			WriteIns("D=M+1");
+			SetRegToDReg(Symbol.SP);
+
+			// Repositions THAT of the caller
+			SetDRegToInt(callerFrameLen - (int)CallerFrame.SavedTHAT);
+			SelectReg(Symbol.R13);   
+			WriteIns("A=M-D");
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.THAT);
+
+			// Repositions THIS of the caller
+			SetDRegToInt(callerFrameLen - (int)CallerFrame.SavedTHIS);
+			SelectReg(Symbol.R13);
+			WriteIns("A=M-D");
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.THIS);
+
+			// Repositions ARG of the caller
+			SetDRegToInt(callerFrameLen - (int)CallerFrame.SavedARG);
+			SelectReg(Symbol.R13);
+			WriteIns("A=M-D");
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.ARG);
+
+			// Repositions LCL of the caller
+			SetDRegToInt(callerFrameLen - (int)CallerFrame.SavedLCL);
+			SelectReg(Symbol.R13);
+			WriteIns("A=M-D");
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.LCL);
+			// -----------------------------------------
+
+			// --- Goes to return address in the caller's code --
+			//SelectReg(Symbol.R14);
+			//WriteIns("D=M");
+			//WriteGoto("D"); // <- seems wrong since it's like go to D label
+			// -----------------------------------------
+		}
+
+		private void SelectReg(Symbol reg)
+		{
+			WriteIns("@" + reg.ToString());
+		}
+
+		/// <summary>
+		/// registerName = D
+		/// </summary>
+		private void SetRegToDReg(string registerName)
+		{
+			WriteIns("@" + registerName);
+			WriteIns("M=D");
+		}
+
+		private void SetRegToDReg(Symbol reg)
+		{
+			SetRegToDReg(reg.ToString());
+		}
+
+		private void SetDRegToInt(int val)
+		{
+			WriteIns("@" + val.ToString());
+			WriteIns("D=A");
 		}
 
 		private void UpdateStackTopValTo(string newVal)
 		{
-			WriteIns("@SP");
+			SelectReg(Symbol.SP);
 			WriteIns("A=M-1");
 			WriteIns("M=" + newVal);
 		}

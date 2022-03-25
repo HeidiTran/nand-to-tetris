@@ -14,8 +14,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -44,8 +43,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -58,8 +56,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -80,8 +77,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -110,8 +106,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -124,8 +119,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -146,8 +140,7 @@
    @R13
    M=D
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    @R13
    A=M
@@ -176,8 +169,7 @@
    M=M+1
 // add
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M+D
@@ -194,8 +186,7 @@
    M=M+1
 // sub
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M-D
@@ -223,15 +214,13 @@
    M=M+1
 // add
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M+D
 // sub
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M-D
@@ -248,8 +237,7 @@
    M=M+1
 // add
    @SP
-   M=M-1
-   A=M
+   AM=M-1
    D=M
    A=A-1
    M=M+D
