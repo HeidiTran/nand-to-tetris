@@ -48,7 +48,9 @@ namespace VMTranslator
 		/// </summary>
 		public void Advance()
 		{
-			CurrentCommand = IsStream.ReadLine().Trim();
+			CurrentCommand = IsStream.ReadLine();
+			// Remove inline comment + trim
+			CurrentCommand = CurrentCommand.Split("//")[0].Trim();
 		}
 
 		/// <summary>

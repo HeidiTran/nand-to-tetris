@@ -7,8 +7,9 @@
 			// string vmFilePath = args[0];
 
 			// For debugging in VisualStudio
-			string t = "SimpleFunction";
-			string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
+			string t = "NestedCall";
+			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
+			string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\Sys.vm";
 
 			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\07\MemoryAccess\" + t + @"\" + t + ".vm";
 			////////////////////////////////

@@ -47,6 +47,8 @@ namespace VMTranslator
 
 		private int Counter { get; set; }
 
+		private int FunctionCallCounter { get; set; }
+
 		public CodeWriter(string vmFilePath)
 		{
 			OsStream = new StreamWriter(vmFilePath.Replace(".vm", ".asm")); ;
@@ -361,7 +363,48 @@ namespace VMTranslator
 		/// <param name="numArgs"></param>
 		public void WriteCall(string functionName, int numArgs)
 		{
-			// TODO
+			int callerFrameLen = Enum.GetValues(typeof(CallerFrame)).Length;
+			string retAddrLbl = FileName + "$ret." + FunctionCallCounter.ToString();    // (FileName$ret.1)
+
+			// Push returnAddress (line of code to return to after completing function call)
+			WriteIns("@" + retAddrLbl);
+			WriteIns("D=A");
+			PushDRegToStack();
+			// --- Saves the caller state ---
+			SelectReg(Symbol.LCL);  // Saves LCL of the caller
+			WriteIns("D=M");
+			PushDRegToStack();
+			SelectReg(Symbol.ARG);  // Saves ARG of the caller
+			WriteIns("D=M");
+			PushDRegToStack();
+			SelectReg(Symbol.THIS);  // Saves THIS of the caller
+			WriteIns("D=M");
+			PushDRegToStack();
+			SelectReg(Symbol.THAT);  // Saves THAT of the caller
+			WriteIns("D=M");
+			PushDRegToStack();
+			// -----------------------------------------
+
+			// --- Set up for the function call---
+			// Reposition ARG = SP - 5 - numArgs
+			SetDRegToInt(callerFrameLen + numArgs);
+			SelectReg(Symbol.SP);
+			WriteIns("D=M-D");
+			SetRegToDReg(Symbol.ARG);
+
+			// Reposition LCL = SP
+			SelectReg(Symbol.SP);
+			WriteIns("D=M");
+			SetRegToDReg(Symbol.LCL);
+			// -----------------------------------------
+
+			// Transfer control to the called function
+			WriteIns("@" + functionName);
+			WriteIns("0;JMP");
+
+			// Declares a label for the return address
+			WriteLblIns("(" + retAddrLbl + ")");
+			FunctionCallCounter++;
 		}
 
 		/// <summary>
@@ -425,9 +468,9 @@ namespace VMTranslator
 			// -----------------------------------------
 
 			// --- Goes to return address in the caller's code --
-			//SelectReg(Symbol.R14);
-			//WriteIns("D=M");
-			//WriteGoto("D"); // <- seems wrong since it's like go to D label
+			SelectReg(Symbol.R14);
+			WriteIns("A=M");
+			WriteIns("0;JMP"); 
 			// -----------------------------------------
 		}
 
