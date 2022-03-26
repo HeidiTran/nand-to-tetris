@@ -202,17 +202,8 @@ namespace VMTranslator
 			else if (segment == "pointer")
 			{
 				// Push the base address of THIS/THAT onto the stack
-				// *SP = THIS/THAT, SP++
-				if (index == 0)
-				{
-					SelectReg(Symbol.THIS);
-				}
-				else
-				{
-					SelectReg(Symbol.THAT);
-				}
-
-				WriteIns("D=M");   // D = THIS/THAT
+				Symbol reg = index == 0 ? Symbol.THIS : Symbol.THAT;
+				SetDRegToValOf(reg);
 				PushDRegToStack();
 			}
 			else if (segment == "static")
@@ -255,16 +246,9 @@ namespace VMTranslator
 		{
 			if (segment == "pointer")
 			{
-				// SP--, THIS/THAT = *SP
 				PopFromStackToDReg();
-				if (index == 0)
-				{
-					SetRegToDReg(Symbol.THIS);
-				}
-				else
-				{
-					SetRegToDReg(Symbol.THAT);
-				}
+				Symbol reg = index == 0 ? Symbol.THIS : Symbol.THAT;
+				SetRegToDReg(reg);
 			}
 			else if (segment == "static")
 			{
@@ -371,30 +355,22 @@ namespace VMTranslator
 			WriteIns("D=A");
 			PushDRegToStack();
 			// --- Saves the caller state ---
-			SelectReg(Symbol.LCL);  // Saves LCL of the caller
-			WriteIns("D=M");
+			SetDRegToValOf(Symbol.LCL);		
 			PushDRegToStack();
-			SelectReg(Symbol.ARG);  // Saves ARG of the caller
-			WriteIns("D=M");
+			SetDRegToValOf(Symbol.ARG);		
 			PushDRegToStack();
-			SelectReg(Symbol.THIS);  // Saves THIS of the caller
-			WriteIns("D=M");
+			SetDRegToValOf(Symbol.THIS);	
 			PushDRegToStack();
-			SelectReg(Symbol.THAT);  // Saves THAT of the caller
-			WriteIns("D=M");
+			SetDRegToValOf(Symbol.THAT);  
 			PushDRegToStack();
 			// -----------------------------------------
 
 			// --- Set up for the function call---
-			// Reposition ARG = SP - 5 - numArgs
-			SetDRegToInt(callerFrameLen + numArgs);
+			SetDRegToInt(callerFrameLen + numArgs); // Reposition ARG = SP - 5 - numArgs
 			SelectReg(Symbol.SP);
 			WriteIns("D=M-D");
 			SetRegToDReg(Symbol.ARG);
-
-			// Reposition LCL = SP
-			SelectReg(Symbol.SP);
-			WriteIns("D=M");
+			SetDRegToValOf(Symbol.SP);  // Reposition LCL = SP
 			SetRegToDReg(Symbol.LCL);
 			// -----------------------------------------
 
@@ -497,6 +473,12 @@ namespace VMTranslator
 		{
 			WriteIns("@" + val.ToString());
 			WriteIns("D=A");
+		}
+
+		private void SetDRegToValOf(Symbol reg)
+		{
+			SelectReg(reg);  
+			WriteIns("D=M");
 		}
 
 		private void UpdateStackTopValTo(string newVal)
