@@ -6,7 +6,7 @@
    M=D
    @SP
    M=M+1
-// pop local 0         // initializes sum = 0
+// pop local 0
    @0
    D=A
    @LCL
@@ -49,7 +49,7 @@
    D=M
    A=A-1
    M=M+D
-// pop local 0	        // sum = sum + counter
+// pop local 0
    @0
    D=A
    @LCL
@@ -87,7 +87,7 @@
    D=M
    A=A-1
    M=M-D
-// pop argument 0      // counter--
+// pop argument 0
    @0
    D=A
    @ARG
@@ -111,7 +111,7 @@
    M=D
    @SP
    M=M+1
-// if-goto LOOP_START  // If counter != 0, goto LOOP_START
+// if-goto LOOP_START
    @SP
    AM=M-1
    D=M

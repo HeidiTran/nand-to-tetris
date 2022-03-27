@@ -7,19 +7,19 @@ namespace VMTranslator
 	{
 		static void Main(string[] args)
 		{
-			// string inputPath = args[0];
+			// VMTranslator.exe BasicTest.vm
+			string inputPath = args[0];
 
 			// For debugging in VisualStudio
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\FibonacciElement";
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\NestedCall";
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\StaticsTest";
+			// string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\StaticsTest";
 
-			//string t = "SimpleFunction";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\07\MemoryAccess\" + t + @"\" + t + ".vm";
+			//string t = "FibonacciSeries";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\ProgramFlow\" + t + @"\" + t + ".vm";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\07\StackArithmetic\" + t + @"\" + t + ".vm";
 			////////////////////////////////
 
-			// VMTranslator.exe BasicTest.vm
 
 			bool isDir = Directory.Exists(inputPath);
 			string outputFilePath = isDir ?
@@ -30,8 +30,7 @@ namespace VMTranslator
 
 			if (!isDir)
 			{
-				string vmFile = inputPath;
-				TranslateVmFile(codeWriter, vmFile);
+				TranslateVmFile(codeWriter, inputPath);
 			}
 			else
 			{

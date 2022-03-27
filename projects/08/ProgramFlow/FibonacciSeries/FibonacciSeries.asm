@@ -9,7 +9,7 @@
    M=D
    @SP
    M=M+1
-// pop pointer 1           // that = argument[1]
+// pop pointer 1
    @SP
    AM=M-1
    D=M
@@ -23,7 +23,7 @@
    M=D
    @SP
    M=M+1
-// pop that 0              // first element in the series = 0
+// pop that 0
    @0
    D=A
    @THAT
@@ -44,7 +44,7 @@
    M=D
    @SP
    M=M+1
-// pop that 1              // second element in the series = 1
+// pop that 1
    @1
    D=A
    @THAT
@@ -82,7 +82,7 @@
    D=M
    A=A-1
    M=M-D
-// pop argument 0          // num_of_elements -= 2 (first 2 elements are set)
+// pop argument 0
    @0
    D=A
    @ARG
@@ -108,13 +108,13 @@
    M=D
    @SP
    M=M+1
-// if-goto COMPUTE_ELEMENT // if num_of_elements > 0, goto COMPUTE_ELEMENT
+// if-goto COMPUTE_ELEMENT
    @SP
    AM=M-1
    D=M
    @COMPUTE_ELEMENT
    D;JNE
-// goto END_PROGRAM        // otherwise, goto END_PROGRAM
+// goto END_PROGRAM
    @END_PROGRAM
    0;JMP
 // label COMPUTE_ELEMENT
@@ -147,7 +147,7 @@
    D=M
    A=A-1
    M=M+D
-// pop that 2              // that[2] = that[0] + that[1]
+// pop that 2
    @2
    D=A
    @THAT
@@ -182,7 +182,7 @@
    D=M
    A=A-1
    M=M+D
-// pop pointer 1           // that += 1
+// pop pointer 1
    @SP
    AM=M-1
    D=M
@@ -213,7 +213,7 @@
    D=M
    A=A-1
    M=M-D
-// pop argument 0          // num_of_elements--
+// pop argument 0
    @0
    D=A
    @ARG
