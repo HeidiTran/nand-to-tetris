@@ -10,7 +10,7 @@ namespace VMTranslator
 	class CodeWriter
 	{
 		private StreamWriter OsStream { get; set; }
-		private string FileName { get; set; }
+		private string VmFileNameWOExt { get; set; }
 
 		private readonly Dictionary<string, string> _segmentToSymbol = new()
 		{
@@ -45,34 +45,39 @@ namespace VMTranslator
 			SavedTHAT
 		};
 
-		private int Counter { get; set; }
+		private int IfCounter { get; set; }
 
 		private int FunctionCallCounter { get; set; }
 
-		public CodeWriter(string vmFilePath)
+		public CodeWriter(string outputFilePath)
 		{
-			OsStream = new StreamWriter(vmFilePath.Replace(".vm", ".asm")); ;
-			FileName = Path.GetFileNameWithoutExtension(vmFilePath);
-			Counter = 0;
+			OsStream = new StreamWriter(outputFilePath); ;
+			IfCounter = 0;
 		}
 
 		/// <summary>
-		/// Informs the class that the translation of a new VM file has started
+		/// Informs the class that the translation of a new VM file has started.
 		/// Called by the Main prog of the VM Translator
 		/// </summary>
 		/// <param name="fileName">Name of the VM file</param>
 		public void SetFileName(string fileName)
 		{
-			// TODO
+			VmFileNameWOExt = Path.GetFileNameWithoutExtension(fileName);
+			FunctionCallCounter = 0;
 		}
 
 		/// <summary>
 		/// Writes the assembly instructions that effect the bootstrap code that initializes the VM.
 		/// This code must be placed at the beginning of the generated *.asm file.
+		/// When the VM implementation starts running, or it's reset
+		/// It starts executing the argument-less OS function Sys.init
+		/// Sys.init (already programmed at OS level) then calls Main.main and enters an infinite loop
 		/// </summary>
 		public void WriteInit()
 		{
-
+			SetDRegToInt(256);			// SP = 256
+			SetRegToDReg(Symbol.SP);
+			WriteCall("Sys.init", 0);	// Call Sys.init
 		}
 
 		public void WriteComment(string comment)
@@ -146,7 +151,7 @@ namespace VMTranslator
 		/// <param name="jumpCond">Possible values: JEQ, JGT, JLT</param>
 		private void WriteLogicCommand(string jumpCond)
 		{
-			string counterStr = Counter.ToString();
+			string counterStr = IfCounter.ToString();
 			PopFromStackToDReg();
 			WriteIns("A=A-1");
 			WriteIns("D=M-D");
@@ -165,7 +170,7 @@ namespace VMTranslator
 			WriteIns("D=" + _true);
 			WriteLblIns("(FINALLY_" + counterStr + ")");
 			UpdateStackTopValTo("D");
-			Counter++;
+			IfCounter++;
 		}
 
 		/// <summary>
@@ -208,7 +213,7 @@ namespace VMTranslator
 			}
 			else if (segment == "static")
 			{
-				WriteIns("@" + FileName + "." + index.ToString());	// xxx.i
+				WriteIns("@" + VmFileNameWOExt + "." + index.ToString());	// xxx.i
 				WriteIns("D=M");
 				PushDRegToStack();
 			}
@@ -253,7 +258,7 @@ namespace VMTranslator
 			else if (segment == "static")
 			{
 				PopFromStackToDReg();
-				SetRegToDReg(FileName + "." + index.ToString());
+				SetRegToDReg(VmFileNameWOExt + "." + index.ToString());
 			}
 			else
 			{
@@ -348,7 +353,7 @@ namespace VMTranslator
 		public void WriteCall(string functionName, int numArgs)
 		{
 			int callerFrameLen = Enum.GetValues(typeof(CallerFrame)).Length;
-			string retAddrLbl = FileName + "$ret." + FunctionCallCounter.ToString();    // (FileName$ret.1)
+			string retAddrLbl = VmFileNameWOExt + "$ret." + FunctionCallCounter.ToString();    // (FileName$ret.1)
 
 			// Push returnAddress (line of code to return to after completing function call)
 			WriteIns("@" + retAddrLbl);

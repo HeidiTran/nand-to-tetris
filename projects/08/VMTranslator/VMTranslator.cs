@@ -1,22 +1,55 @@
-﻿namespace VMTranslator
+﻿using System;
+using System.IO;
+
+namespace VMTranslator
 {
 	class VMTranslator
 	{
 		static void Main(string[] args)
 		{
-			// string vmFilePath = args[0];
+			// string inputPath = args[0];
 
 			// For debugging in VisualStudio
-			string t = "NestedCall";
-			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
-			string vmFilePath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\Sys.vm";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\FibonacciElement";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\NestedCall";
+			string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\StaticsTest";
 
-			//string vmFilePath = @"C:\Projects\nand-to-tetris\projects\07\MemoryAccess\" + t + @"\" + t + ".vm";
+			//string t = "SimpleFunction";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\08\FunctionCalls\" + t + @"\" + t + ".vm";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\07\MemoryAccess\" + t + @"\" + t + ".vm";
 			////////////////////////////////
 
 			// VMTranslator.exe BasicTest.vm
-			Parser parser = new(vmFilePath);
-			CodeWriter codeWriter = new(vmFilePath);
+
+			bool isDir = Directory.Exists(inputPath);
+			string outputFilePath = isDir ?
+				inputPath + Path.DirectorySeparatorChar + new DirectoryInfo(inputPath).Name + ".asm" : 
+				inputPath.Replace(".vm", ".asm");
+
+			CodeWriter codeWriter = new(outputFilePath);
+
+			if (!isDir)
+			{
+				string vmFile = inputPath;
+				TranslateVmFile(codeWriter, vmFile);
+			}
+			else
+			{
+				codeWriter.WriteInit();	// Only generating startup code for directory
+				string[] vmFiles = Directory.GetFiles(inputPath, "*.vm");
+				foreach (string vmFile in vmFiles)
+				{
+					TranslateVmFile(codeWriter, vmFile);
+				}
+			}
+
+			codeWriter.Close();
+		}
+
+		private static void TranslateVmFile(CodeWriter codeWriter, string vmFile)
+		{
+			Parser parser = new(vmFile);
+			codeWriter.SetFileName(vmFile);
 
 			while (parser.HasMoreCommands())
 			{
@@ -62,7 +95,6 @@
 			}
 
 			parser.Close();
-			codeWriter.Close();
 		}
 	}
 }
