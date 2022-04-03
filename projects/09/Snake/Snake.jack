@@ -1,0 +1,127 @@
+/** Implements a graphical snake. */
+class Snake {
+   field SnakeChunk head, tail;
+   field int jumpSize; // length of chunk + chunk's separation
+
+   /** Constructs a new snake with a given location*/
+   constructor Snake new(int Ax, int Ay) {
+      let jumpSize = Utils.getJumpSize();
+      let head = SnakeChunk.new(Ax, Ay);
+      let tail = SnakeChunk.new(Ax - jumpSize, Ay);
+      do tail.setNextChunk(head);
+      return this;
+   }
+
+   /** Disposes this snake. */
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+
+    /** Grows the snake size by a 9 x 9 square pixels at the tail. */
+   method void grow() {
+      var SnakeChunk newTail;
+      var int tailX, tailY, prevTailX, prevTailY;
+      var bool pointN, pointS, pointE, pointW;
+
+      let tailX = tail.getX();
+      let tailY = tail.getY();
+      let pointN = (tailX = prevTailX) & (tailY < prevTailY);
+      let pointS = (tailX = prevTailX) & (tailY > prevTailY);
+      let pointW = (tailX > prevTailX) & (tailY = prevTailY);
+
+      let newTail = makeTailWhenMoving(pointN, pointS, pointW);
+      do newTail.setNextChunk(tail);
+      let tail = newTail;
+      return;
+   }
+
+   /** Turn the snake in the up direction. */
+   method void moveUp() {
+      var int x, y;
+      let x = head.getX();
+      let y = head.getY();
+      if (Utils.isSquareInScreen(x, y - jumpSize)) {
+         do move(x, y - jumpSize);
+      }
+      return;
+   }
+
+   /** Turn the snake in the down direction. */
+   method void moveDown() {
+      var int x, y;
+      let x = head.getX();
+      let y = head.getY();
+      if (Utils.isSquareInScreen(x, y + jumpSize)) {
+         do move(x, y + jumpSize);
+      }
+      return;
+   }
+
+   /** Turn the snake in the left direction. */
+   method void moveLeft() {
+      var int x, y;
+      let x = head.getX();
+      let y = head.getY();
+      if (Utils.isSquareInScreen(x - jumpSize, y)) {
+         do move(x - jumpSize, y);
+      }
+      return;
+   }
+
+   /** Turn the snake in the right direction. */
+   method void moveRight() {
+      var int x, y;
+      let x = head.getX();
+      let y = head.getY();
+      if (Utils.isSquareInScreen(x + jumpSize, y)) {
+         do move(x + jumpSize, y);
+      }
+      return;
+   }
+
+   method void move(int newX, int newY) {
+      var SnakeChunk newHead, newTail;
+      let newHead = SnakeChunk.new(newX, newY);
+      do head.setNextChunk(newHead);
+      let head = newHead;
+
+      let newTail = tail.getNextChunk();
+      do tail.erase();
+      do tail.dispose();
+      let tail = newTail;
+      return;
+   }
+
+   method SnakeChunk makeTailWhenMoving(bool up, bool down, bool left) {
+      var int tailX, tailY;
+      let tailX = tail.getX();
+      let tailY = tail.getY();
+      if (up) {
+         return SnakeChunk.new(tailX, tailY + jumpSize);
+      }
+      if (down) {
+         return SnakeChunk.new(tailX, tailY - jumpSize);
+      }
+      if (left) {
+         return SnakeChunk.new(tailX + jumpSize, tailY);
+      }
+
+      return SnakeChunk.new(tailX - jumpSize, tailY);
+   }
+
+   method bool isTouchingApple() {
+      // TODO: implement
+      return false;
+   }
+
+   method bool isTouchingWall() {
+      // TODO: implement
+      return false;
+   }
+
+   method bool isTouchingSelf() {
+      // TODO: implement
+      return false;
+   }
+}

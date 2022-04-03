@@ -1,0 +1,22 @@
+class Utils {
+   function bool isSquareInScreen(int topLeftX, int topLeftY) {
+      var int jumpSize;
+      let jumpSize = Utils.getJumpSize();
+      return Utils.isCoorInScreen(topLeftX, topLeftY) & 
+         Utils.isCoorInScreen(topLeftX + jumpSize, topLeftY) &
+         Utils.isCoorInScreen(topLeftX + jumpSize, topLeftY + jumpSize) &
+         Utils.isCoorInScreen(topLeftX, topLeftY + jumpSize);
+   }
+
+   function bool isCoorInScreen(int x, int y) {
+      return ((x > -1) & (x < 513) & (y > -1) & (y < 257));
+   }
+
+   function int getChunkSize() {
+      return 9;
+   }
+
+   function int getJumpSize() {
+      return Utils.getChunkSize() + 3; // length of chunk + chunk's separation
+   }
+}

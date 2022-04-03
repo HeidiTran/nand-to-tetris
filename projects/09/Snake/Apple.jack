@@ -1,0 +1,31 @@
+/** Implements a graphical apple. */
+class Apple {
+   field int x, y; // screen location of the apple's top-left corner
+
+   /** Constructs a new apple*/
+   constructor Apple new(int Ax, int Ay) {
+      let x = Ax;
+      let y = Ay;
+      do draw();
+      return this;
+   }
+
+   /** Disposes the apple. */
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   /** Draws the apple on the screen. */
+   method void draw() {
+      // TODO: implement
+      return;
+   }
+
+   /** Erases the apple from the screen. */
+   method void erase() {
+      // TODO: implement
+      return;
+   }
+}
+

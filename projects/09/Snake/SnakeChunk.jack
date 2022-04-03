@@ -1,0 +1,43 @@
+class SnakeChunk {
+   field int X, Y;
+   field SnakeChunk nextChunk;
+   field int size;
+
+   constructor SnakeChunk new(int x, int y) {
+      let X = x;
+      let Y = y;
+      let nextChunk = null;
+      let size = Utils.getChunkSize();
+      do draw();
+      return this;
+   }
+
+   /** Disposes this chunk. */
+   method void dispose() {
+      do Memory.deAlloc(this);
+      return;
+   }
+
+   method void draw() {
+      do Screen.setColor(true);
+      do Screen.drawRectangle(X, Y, X + size, Y + size);
+      return;
+   }
+
+	method void erase() {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(X, Y, X + size, Y + size);
+      return;
+   }
+
+   /** Accessors. */
+   method int getNextChunk() { return nextChunk; }
+   method int getX() { return X; }
+   method int getY() { return Y; }
+
+	/** Mutators. */
+   method void setNextChunk(SnakeChunk next) {
+      let nextChunk = next;
+      return;
+   }
+}
