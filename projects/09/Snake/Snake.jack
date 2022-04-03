@@ -1,9 +1,9 @@
 /** Implements a graphical snake. */
 class Snake {
    field SnakeChunk head, tail;
-   field int jumpSize; // length of chunk + chunk's separation
-   field Apple apple; // the current apple
+   static int jumpSize; // length of chunk + chunk's separation
    field RandNumGen randX, randY;
+   field Apple apple; // the current apple
 
    /** Constructs a new snake with a given location*/
    constructor Snake new(int Ax, int Ay) {
@@ -16,7 +16,7 @@ class Snake {
 
       let randX = RandNumGen.new(1, 42);
       let randY = RandNumGen.new(4, 21);
-      let apple = getRandomApple();
+      let apple = Apple.new(randX, randY);
       return this;
    }
 
@@ -32,8 +32,6 @@ class Snake {
    // TODO: Need to update to recursively disposing its tail
    /** Disposes this snake. */
    method void dispose() {
-      do randX.dispose();
-      do randY.dispose();
       do apple.dispose();
       do Memory.deAlloc(this);
       return;
@@ -62,9 +60,10 @@ class Snake {
       var int x, y;
       let x = head.getX();
       let y = head.getY();
-      if (Utils.isSquareInScreen(x, y - jumpSize)) {
-         do move(x, y - jumpSize);
+      if (Utils.isTouchingWall(x, y - jumpSize)) {
+         do Sys.halt();
       }
+      do move(x, y - jumpSize);
       return;
    }
 
@@ -73,9 +72,11 @@ class Snake {
       var int x, y;
       let x = head.getX();
       let y = head.getY();
-      if (Utils.isSquareInScreen(x, y + jumpSize)) {
-         do move(x, y + jumpSize);
+
+      if (Utils.isTouchingWall(x, y + jumpSize)) {
+         do Sys.halt();
       }
+      do move(x, y + jumpSize);
       return;
    }
 
@@ -84,9 +85,10 @@ class Snake {
       var int x, y;
       let x = head.getX();
       let y = head.getY();
-      if (Utils.isSquareInScreen(x - jumpSize, y)) {
-         do move(x - jumpSize, y);
+      if (Utils.isTouchingWall(x - jumpSize, y)) {
+         do Sys.halt();
       }
+      do move(x - jumpSize, y);
       return;
    }
 
@@ -95,15 +97,29 @@ class Snake {
       var int x, y;
       let x = head.getX();
       let y = head.getY();
-      if (Utils.isSquareInScreen(x + jumpSize, y)) {
-         do move(x + jumpSize, y);
+      if (Utils.isTouchingWall(x + jumpSize, y)) {
+         do Sys.halt();
       }
+      do move(x + jumpSize, y);
       return;
    }
 
    method void move(int newX, int newY) {
       var SnakeChunk newHead, newTail;
-      var bool ateApple;
+      var bool ateApple, touchSelf;
+
+      let ateApple = isTouchingApple();
+      if (ateApple) {
+         do apple.dispose();
+         let apple = Apple.new(randX, randY);
+         do grow();
+      } 
+
+      // let touchSelf = isTouchingSelf(newX, newY);
+      // if ((~ateApple) & touchSelf) {
+      //    do Sys.halt();
+      //    return;
+      // }
 
       let newHead = SnakeChunk.new(newX, newY);
       do head.setNextChunk(newHead);
@@ -113,14 +129,6 @@ class Snake {
       do tail.erase();
       do tail.dispose();
       let tail = newTail;
-
-      let ateApple = isTouchingApple();
-      if (ateApple) {
-         do apple.dispose();
-         let apple = getRandomApple();
-         do grow();
-      }
-      do Sys.wait(100);
       return;
    }
 
@@ -141,28 +149,6 @@ class Snake {
       return SnakeChunk.new(tailX - jumpSize, tailY);
    }
 
-   method Apple getRandomApple() {
-      var int appleX, appleY;
-
-      let appleX = getAppleX();
-      let appleY = getAppleY();
-      return Apple.new(appleX, appleY);
-   }
-
-   method int getAppleX() {
-      var int randNum, aMinX;
-      let randNum = randX.getRandNum();
-      let aMinX = Apple.getMinX();
-      return randNum*jumpSize + aMinX;
-   }
-
-   method int getAppleY() {
-      var int randNum, aMinY;
-      let randNum = randY.getRandNum();
-      let aMinY = Apple.getMinY();
-      return randNum*jumpSize + aMinY;
-   }
-
    method bool isTouchingApple() {
       var int aTopX, aTopY, sTopX, sTopY;
       let aTopX = apple.getX();
@@ -172,13 +158,9 @@ class Snake {
       return (aTopX = sTopX) & (aTopY = sTopY);
    }
 
-   method bool isTouchingWall() {
-      // TODO: implement
-      return false;
-   }
-
-   method bool isTouchingSelf() {
-      // TODO: implement
-      return false;
+   method bool isTouchingSelf(int x, int y) {
+      var int cellVal;
+      let cellVal = Utils.getMemValForCoor(x, y);
+      return ~(cellVal = 0);
    }
 }

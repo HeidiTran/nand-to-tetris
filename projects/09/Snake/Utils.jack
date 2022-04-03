@@ -20,6 +20,10 @@ class Utils {
       return Utils.getChunkSize() + 3; // length of chunk + chunk's separation
    }
 
+   function bool isTouchingWall(int x, int y) {
+      return ~Utils.isSquareInScreen(x, y);
+   }
+
    function void drawSquare(int x, int y, int size) {
       do Screen.setColor(true);
       do Screen.drawRectangle(x, y, x + size, y + size);
@@ -37,5 +41,11 @@ class Utils {
       let quotient = x/y;
       let remainder = x - (y*quotient);
       return remainder;
+   }
+
+   function int getMemValForCoor(int x, int y) {
+      var int addr;
+      let addr = (32*y) + (x/16);
+      return Memory.peek(16384 + addr);
    }
 }

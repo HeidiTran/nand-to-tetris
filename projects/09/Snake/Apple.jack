@@ -1,13 +1,14 @@
 /** Implements a graphical apple. */
 class Apple {
    field int X, Y; // screen location of the apple's top-left corner
-   static int petalSize;
+   static int jumpSize, petalSize;
 
    /** Constructs a new apple*/
-   constructor Apple new(int Ax, int Ay) {
-      let X = Ax;
-      let Y = Ay;
+   constructor Apple new(RandNumGen rX, RandNumGen rY) {
+      let jumpSize = Utils.getJumpSize();
       let petalSize = 3;
+      let X = getRandomX(rX);
+      let Y = getRandomY(rY);
       do draw();
       return this;
    }
@@ -29,28 +30,22 @@ class Apple {
       return;
    }
 
-   /** Erases the apple from the screen. */
-   method void erase() {
-      var int  twoPetalsize;
-      let twoPetalsize = 2 * petalSize;
-      do Utils.eraseSquare(X + petalSize, Y, petalSize);
-      do Utils.eraseSquare(X + petalSize, Y + twoPetalsize, petalSize);
-      do Utils.eraseSquare(X, Y + petalSize, petalSize);
-      do Utils.eraseSquare(X + twoPetalsize, Y + petalSize, petalSize);
-      return;
+   /** Get a random X coordinate for the apple. */
+   method int getRandomX(RandNumGen rand) {
+      var int randNum;
+      let randNum = rand.getRandNum();
+      return randNum*jumpSize + 5;  // 5 is minX
+   }
+
+   /** Get a random Y coordinate for the apple. */
+   method int getRandomY(RandNumGen rand) {
+      var int randNum;
+      let randNum = rand.getRandNum();
+      return randNum*jumpSize + 3;  // 3 is minY
    }
 
    /** Accessors. */
    method int getX() { return X; }
    method int getY() { return Y; }
-
-   /** Static methods */
-   function int getMinX() {
-      return 5;
-   }
-
-   function int getMinY() {
-      return 3;
-   }
 }
 

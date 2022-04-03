@@ -1,4 +1,4 @@
-/**Generate a pseudo random number between [0, end)*/
+/**Generate a pseudo random number between [0, end) using Linear Congruential Method*/
 class RandNumGen {
     field int seed, multiplier, increment, end, curRandNum;
 
@@ -6,22 +6,22 @@ class RandNumGen {
     constructor RandNumGen new(int rSeed, int endR) {
         let seed = rSeed;
         let multiplier = 3; // Chosen randomly
-        let increment = 3; // Chosen randomly
+        let increment = 3;  // Chosen randomly
         let end = endR;
         let curRandNum = seed;
         return this;
     }
 
-    /** Disposes the apple. */
+    /** Disposes the generator. */
     method void dispose() {
       do Memory.deAlloc(this);
       return;
    }
 
+    /** Get the next number in the sequence of random numbers. */
     method int getRandNum() {
         var int x, newRandNum;
-        let x = (curRandNum * multiplier) + increment;
-        let newRandNum = Utils.mod(x, end);
+        let newRandNum = Utils.mod((curRandNum * multiplier) + increment, end);
         let curRandNum = newRandNum;
         return curRandNum;
     }
