@@ -19,14 +19,12 @@ class SnakeChunk {
    }
 
    method void draw() {
-      do Screen.setColor(true);
-      do Screen.drawRectangle(X, Y, X + size, Y + size);
+      do Utils.drawSquare(X, Y, size);
       return;
    }
 
 	method void erase() {
-      do Screen.setColor(false);
-      do Screen.drawRectangle(X, Y, X + size, Y + size);
+      do Utils.eraseSquare(X, Y, size);
       return;
    }
 

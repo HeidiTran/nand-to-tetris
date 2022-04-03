@@ -2,18 +2,39 @@
 class Snake {
    field SnakeChunk head, tail;
    field int jumpSize; // length of chunk + chunk's separation
+   field Apple apple; // the current apple
+   field RandNumGen randX, randY;
 
    /** Constructs a new snake with a given location*/
    constructor Snake new(int Ax, int Ay) {
+      do drawScreenBorder();
+
       let jumpSize = Utils.getJumpSize();
       let head = SnakeChunk.new(Ax, Ay);
       let tail = SnakeChunk.new(Ax - jumpSize, Ay);
       do tail.setNextChunk(head);
+
+      let randX = RandNumGen.new(1, 42);
+      let randY = RandNumGen.new(4, 21);
+      let apple = getRandomApple();
       return this;
    }
 
+   // TODO: turn this into a function
+   method void drawScreenBorder() {
+      do Screen.drawRectangle(0, 0, 511, 2);
+      do Screen.drawRectangle(507, 0, 511, 255);
+      do Screen.drawRectangle(0, 0, 4, 255);
+      do Screen.drawRectangle(0, 253, 511, 255);
+      return;
+   }
+
+   // TODO: Need to update to recursively disposing its tail
    /** Disposes this snake. */
    method void dispose() {
+      do randX.dispose();
+      do randY.dispose();
+      do apple.dispose();
       do Memory.deAlloc(this);
       return;
    }
@@ -82,6 +103,8 @@ class Snake {
 
    method void move(int newX, int newY) {
       var SnakeChunk newHead, newTail;
+      var bool ateApple;
+
       let newHead = SnakeChunk.new(newX, newY);
       do head.setNextChunk(newHead);
       let head = newHead;
@@ -90,6 +113,14 @@ class Snake {
       do tail.erase();
       do tail.dispose();
       let tail = newTail;
+
+      let ateApple = isTouchingApple();
+      if (ateApple) {
+         do apple.dispose();
+         let apple = getRandomApple();
+         do grow();
+      }
+      do Sys.wait(100);
       return;
    }
 
@@ -110,9 +141,35 @@ class Snake {
       return SnakeChunk.new(tailX - jumpSize, tailY);
    }
 
+   method Apple getRandomApple() {
+      var int appleX, appleY;
+
+      let appleX = getAppleX();
+      let appleY = getAppleY();
+      return Apple.new(appleX, appleY);
+   }
+
+   method int getAppleX() {
+      var int randNum, aMinX;
+      let randNum = randX.getRandNum();
+      let aMinX = Apple.getMinX();
+      return randNum*jumpSize + aMinX;
+   }
+
+   method int getAppleY() {
+      var int randNum, aMinY;
+      let randNum = randY.getRandNum();
+      let aMinY = Apple.getMinY();
+      return randNum*jumpSize + aMinY;
+   }
+
    method bool isTouchingApple() {
-      // TODO: implement
-      return false;
+      var int aTopX, aTopY, sTopX, sTopY;
+      let aTopX = apple.getX();
+      let aTopY = apple.getY();
+      let sTopX = head.getX();
+      let sTopY = head.getY();
+      return (aTopX = sTopX) & (aTopY = sTopY);
    }
 
    method bool isTouchingWall() {

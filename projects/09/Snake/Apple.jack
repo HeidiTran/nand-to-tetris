@@ -1,11 +1,13 @@
 /** Implements a graphical apple. */
 class Apple {
-   field int x, y; // screen location of the apple's top-left corner
+   field int X, Y; // screen location of the apple's top-left corner
+   static int petalSize;
 
    /** Constructs a new apple*/
    constructor Apple new(int Ax, int Ay) {
-      let x = Ax;
-      let y = Ay;
+      let X = Ax;
+      let Y = Ay;
+      let petalSize = 3;
       do draw();
       return this;
    }
@@ -18,14 +20,37 @@ class Apple {
 
    /** Draws the apple on the screen. */
    method void draw() {
-      // TODO: implement
+      var int  twoPetalsize;
+      let twoPetalsize = 2 * petalSize;
+      do Utils.drawSquare(X + petalSize, Y, petalSize);
+      do Utils.drawSquare(X + petalSize, Y + twoPetalsize, petalSize);
+      do Utils.drawSquare(X, Y + petalSize, petalSize);
+      do Utils.drawSquare(X + twoPetalsize, Y + petalSize, petalSize);
       return;
    }
 
    /** Erases the apple from the screen. */
    method void erase() {
-      // TODO: implement
+      var int  twoPetalsize;
+      let twoPetalsize = 2 * petalSize;
+      do Utils.eraseSquare(X + petalSize, Y, petalSize);
+      do Utils.eraseSquare(X + petalSize, Y + twoPetalsize, petalSize);
+      do Utils.eraseSquare(X, Y + petalSize, petalSize);
+      do Utils.eraseSquare(X + twoPetalsize, Y + petalSize, petalSize);
       return;
+   }
+
+   /** Accessors. */
+   method int getX() { return X; }
+   method int getY() { return Y; }
+
+   /** Static methods */
+   function int getMinX() {
+      return 5;
+   }
+
+   function int getMinY() {
+      return 3;
    }
 }
 

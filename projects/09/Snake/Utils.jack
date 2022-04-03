@@ -19,4 +19,23 @@ class Utils {
    function int getJumpSize() {
       return Utils.getChunkSize() + 3; // length of chunk + chunk's separation
    }
+
+   function void drawSquare(int x, int y, int size) {
+      do Screen.setColor(true);
+      do Screen.drawRectangle(x, y, x + size, y + size);
+      return;
+   }
+
+   function void eraseSquare(int x, int y, int size) {
+      do Screen.setColor(false);
+      do Screen.drawRectangle(x, y, x + size, y + size);
+      return;
+   }
+
+   function int mod(int x, int y) {
+      var int quotient, remainder;
+      let quotient = x/y;
+      let remainder = x - (y*quotient);
+      return remainder;
+   }
 }
