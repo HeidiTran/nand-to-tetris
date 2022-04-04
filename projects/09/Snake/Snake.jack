@@ -2,36 +2,34 @@
 class Snake {
    field SnakeChunk head, tail;
    static int jumpSize; // length of chunk + chunk's separation
-   field RandNumGen randX, randY;
+   field RandNumGen randX, randY; // To generate a random location for the apple
    field Apple apple; // the current apple
 
    /** Constructs a new snake with a given location*/
    constructor Snake new(int Ax, int Ay) {
-      do drawScreenBorder();
-
       let jumpSize = Utils.getJumpSize();
       let head = SnakeChunk.new(Ax, Ay);
       let tail = SnakeChunk.new(Ax - jumpSize, Ay);
       do tail.setNextChunk(head);
 
-      let randX = RandNumGen.new(1, 42);
-      let randY = RandNumGen.new(4, 21);
+      let randX = RandNumGen.new(1, 42); // 512 // 12 = 42
+      let randY = RandNumGen.new(4, 21); // 256 // 12 = 21
       let apple = Apple.new(randX, randY);
       return this;
    }
 
-   // TODO: turn this into a function
-   method void drawScreenBorder() {
-      do Screen.drawRectangle(0, 0, 511, 2);
-      do Screen.drawRectangle(507, 0, 511, 255);
-      do Screen.drawRectangle(0, 0, 4, 255);
-      do Screen.drawRectangle(0, 253, 511, 255);
-      return;
-   }
-
-   // TODO: Need to update to recursively disposing its tail
    /** Disposes this snake. */
    method void dispose() {
+      var SnakeChunk tailNext;
+      let tailNext = tail.getNextChunk();
+      while (~(tailNext = null)) {
+         do tail.dispose();
+         let tail = tailNext;
+         let tailNext = tail.getNextChunk();
+      }
+
+      do randX.dispose();
+      do randY.dispose();
       do apple.dispose();
       do Memory.deAlloc(this);
       return;
@@ -115,12 +113,6 @@ class Snake {
          do grow();
       } 
 
-      // let touchSelf = isTouchingSelf(newX, newY);
-      // if ((~ateApple) & touchSelf) {
-      //    do Sys.halt();
-      //    return;
-      // }
-
       let newHead = SnakeChunk.new(newX, newY);
       do head.setNextChunk(newHead);
       let head = newHead;
@@ -156,11 +148,5 @@ class Snake {
       let sTopX = head.getX();
       let sTopY = head.getY();
       return (aTopX = sTopX) & (aTopY = sTopY);
-   }
-
-   method bool isTouchingSelf(int x, int y) {
-      var int cellVal;
-      let cellVal = Utils.getMemValForCoor(x, y);
-      return ~(cellVal = 0);
    }
 }

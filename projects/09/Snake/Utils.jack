@@ -1,4 +1,12 @@
 class Utils {
+   function void drawScreenBorder() {
+      do Screen.drawRectangle(0, 0, 511, 2);
+      do Screen.drawRectangle(507, 0, 511, 255);
+      do Screen.drawRectangle(0, 0, 4, 255);
+      do Screen.drawRectangle(0, 253, 511, 255);
+      return;
+   }
+
    function bool isSquareInScreen(int topLeftX, int topLeftY) {
       var int jumpSize;
       let jumpSize = Utils.getJumpSize();
@@ -12,12 +20,8 @@ class Utils {
       return ((x > -1) & (x < 513) & (y > -1) & (y < 257));
    }
 
-   function int getChunkSize() {
-      return 9;
-   }
-
    function int getJumpSize() {
-      return Utils.getChunkSize() + 3; // length of chunk + chunk's separation
+      return SnakeChunk.getChunkSize() + 3; // length of chunk + chunk's separation
    }
 
    function bool isTouchingWall(int x, int y) {

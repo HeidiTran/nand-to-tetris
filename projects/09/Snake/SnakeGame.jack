@@ -1,5 +1,8 @@
 /**
- * TODO: Write game instruction here
+ * Controls the snake with arrow keys.
+ * Goal: Eat as many apples as possible.
+ * The snake will die if it hits a wall.
+ * The 'q' key is used to quit the game.
  */
 
 class SnakeGame {
@@ -9,9 +12,11 @@ class SnakeGame {
 
    /** Constructs a new Snake Game. */
    constructor SnakeGame new() {
-      // Creates a snake and positions it in the middle
-      // of the screen with two chunks.
-      let snake = Snake.new(5 + 12, 3 + 12);
+      // Creates a two-chunk snake and positions it in the top left
+      // of the screen.
+      var int jumpSize;
+      let jumpSize = Utils.getJumpSize();
+      let snake = Snake.new(5 + (jumpSize * 2), 3 + jumpSize);
       let direction = 0;  // initial state is no movement
       return this;
    }
@@ -38,6 +43,7 @@ class SnakeGame {
       var char key;  // the key currently pressed by the user
       var boolean exit;
       let exit = false;
+      do Utils.drawScreenBorder();
       
       while (~exit) {
          // waits for a key to be pressed

@@ -1,13 +1,15 @@
+/** Implements a graphical snake chunk. */
 class SnakeChunk {
-   field int X, Y;
+   field int X, Y; // screen location of the chunk's top-left corner
    field SnakeChunk nextChunk;
-   field int size;
+   field int size; // size of the chunk
 
+   /** Constructs a new snake's chunk*/
    constructor SnakeChunk new(int x, int y) {
       let X = x;
       let Y = y;
       let nextChunk = null;
-      let size = Utils.getChunkSize();
+      let size = SnakeChunk.getChunkSize();
       do draw();
       return this;
    }
@@ -18,11 +20,13 @@ class SnakeChunk {
       return;
    }
 
+   /** Draws the chunk on the screen. */
    method void draw() {
       do Utils.drawSquare(X, Y, size);
       return;
    }
 
+   /** Erases the chunk from the screen. */
 	method void erase() {
       do Utils.eraseSquare(X, Y, size);
       return;
@@ -37,5 +41,10 @@ class SnakeChunk {
    method void setNextChunk(SnakeChunk next) {
       let nextChunk = next;
       return;
+   }
+
+   /** Static method */
+   function int getChunkSize() {
+      return 9;
    }
 }
