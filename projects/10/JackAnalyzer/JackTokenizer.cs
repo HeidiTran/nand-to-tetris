@@ -264,7 +264,7 @@ namespace JackAnalyzer
 			{
 				throw new Exception("GetKeyWord should be called only if `GetTokenType` is KEYWORD!");
 			}
-			_ = Enum.TryParse(_currentToken, out KeyWord keyWord);
+			_ = Enum.TryParse(_currentToken.ToUpperInvariant(), out KeyWord keyWord);
 			return keyWord;
 		}
 
@@ -340,6 +340,48 @@ namespace JackAnalyzer
 			}
 
 			return _currentToken;
+		}
+
+		public bool IsClassVarType()
+		{
+			return GetTokenType() == TokenType.KEYWORD && (
+				_currentToken == "static" || 
+				_currentToken == "field");
+		}
+
+		public bool IsSubroutineVarType()
+		{
+			return GetTokenType() == TokenType.KEYWORD && _currentToken == "var";
+		}
+
+		public bool IsSubroutineKw()
+		{
+			return GetTokenType() == TokenType.KEYWORD && (
+				_currentToken == "constructor" || 
+				_currentToken == "function" || 
+				_currentToken == "method");
+		}
+
+		public bool IsComma()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == ",";
+		}
+
+		private static readonly HashSet<string> _varTypes = new()
+		{
+			"boolean",
+			"int",
+			"char"
+		};
+
+		public bool IsVarType()
+		{
+			return _varTypes.Contains(_currentToken) || GetTokenType() == TokenType.IDENTIFIER;
+		}
+
+		public bool IsSubroutineType()
+		{
+			return _varTypes.Contains(_currentToken) || GetTokenType() == TokenType.IDENTIFIER || _currentToken == "void";
 		}
 	}
 }

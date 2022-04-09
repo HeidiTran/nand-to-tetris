@@ -23,18 +23,11 @@ namespace JackAnalyzer
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ArrayTest\Main.jack";
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\Main.jack";
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\Square.jack";
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\SquareGame.jack";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ExpressionLessSquare\test.jack";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\SquareGame.jack";
+			string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ExpressionLessSquare\test.jack";
 			JackTokenizer tokenizer = new(inputPath);
-
-			Console.WriteLine("<tokens>");
-			while (tokenizer.HasMoreTokens())
-			{
-				tokenizer.Advance();
-				string tokenTypeStr = TokenTypeStr[tokenizer.GetTokenType()];
-				Console.WriteLine("<" + tokenTypeStr + "> " + tokenizer.GetCurrentToken() + " </" + tokenTypeStr + ">");
-			}
-			Console.WriteLine("</tokens>");
+			CompilationEngine compilationEngine = new CompilationEngine(tokenizer, "test.xml");
+			compilationEngine.CompileClass();
 		}
 	}
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 /// <summary>
@@ -12,13 +8,15 @@ namespace JackAnalyzer
 {
 	class CompilationEngine
 	{
-		private StreamReader StreamReader;
-		private StreamWriter _streamWriter;
+		private readonly StreamWriter _streamWriter;
+		private readonly JackTokenizer _tokenizer;
+		private int _indentLevel;
 
-		public CompilationEngine(string jackFilePath, string xmlFilePath)
+		public CompilationEngine(JackTokenizer tokenizer, string xmlFilePath)
 		{
+			_tokenizer = tokenizer;
 			_streamWriter = new StreamWriter(xmlFilePath);
-			// TODO: The next function call must be CompileClass
+			_indentLevel = 0;
 		}
 
 		/// <summary>
@@ -26,7 +24,30 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileClass()
 		{
+			if (!_tokenizer.HasMoreTokens()) return; 
+			_tokenizer.Advance();
+			WriteL("<class>");
+			_indentLevel++;
 
+			Eat("class");
+			CompileName();
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			Eat("{");
+
+			while (_tokenizer.HasMoreTokens() && _tokenizer.IsClassVarType())
+			{
+				CompileClassVarDec();
+			}
+
+			while (_tokenizer.HasMoreTokens() && _tokenizer.IsSubroutineKw())
+			{
+				CompileSubroutineDec();
+			}
+
+			Eat("}");
+			_indentLevel--;
+			WriteL("</class>");
 		}
 
 		/// <summary>
@@ -34,15 +55,66 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileClassVarDec()
 		{
+			WriteL("<classVarDec>");
+			_indentLevel++;
+			if (_tokenizer.IsClassVarType())
+			{
+				WriteTerminalElem();
+			}
 
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			CompileVarTypeVarName();
+
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			while (_tokenizer.IsComma())
+			{
+				WriteTerminalElem();
+				if (!_tokenizer.HasMoreTokens()) return;
+				_tokenizer.Advance();
+				WriteTerminalElem();
+				if (!_tokenizer.HasMoreTokens()) return;
+				_tokenizer.Advance();
+			}
+
+			Eat(";");
+			_indentLevel--;
+			WriteL("</classVarDec>");
 		}
 
 		/// <summary>
-		/// Compiles a complete mehtod, function, or constructor.
+		/// Compiles a complete method, function, or constructor.
 		/// </summary>
 		public void CompileSubroutineDec()
 		{
+			WriteL("<subroutineDec>");
+			_indentLevel++;
+			if (_tokenizer.IsSubroutineKw())
+			{
+				WriteTerminalElem();
+			}
 
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			// TODO: come up with a better way to check if it's a valid type
+			CompileType(_tokenizer.IsSubroutineType());
+
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			CompileName();
+
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			Eat("(");
+
+			CompileParameterList();
+
+			Eat(")");
+			CompileSubroutineBody();
+
+			_indentLevel--;
+			WriteL("</subroutineDec>");
 		}
 
 		/// <summary>
@@ -50,15 +122,45 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileParameterList()
 		{
+			WriteL("<parameterList>");
+			_indentLevel++;
 
+			if (_tokenizer.HasMoreTokens() && _tokenizer.IsVarType())
+			{
+				CompileVarTypeVarName();
+				if (!_tokenizer.HasMoreTokens()) return;
+				_tokenizer.Advance();
+
+				while (_tokenizer.IsComma())
+				{
+					WriteTerminalElem();
+					if (!_tokenizer.HasMoreTokens()) return;
+					_tokenizer.Advance();
+					CompileVarTypeVarName();
+					if (!_tokenizer.HasMoreTokens()) return;
+					_tokenizer.Advance();
+				}
+			}
+
+			_indentLevel--;
+			WriteL("</parameterList>");
 		}
 
 		/// <summary>
-		/// Compiles a subroutin's body.
+		/// Compiles a subroutine's body.
 		/// </summary>
 		public void CompileSubroutineBody()
 		{
-
+			WriteL("<subroutineBody>");
+			_indentLevel++;
+			Eat("{");
+			while (_tokenizer.HasMoreTokens() && _tokenizer.IsSubroutineVarType())
+			{
+				CompileVarDec();
+			}
+			Eat("}");
+			_indentLevel--;
+			WriteL("</subroutineBody>");
 		}
 
 		/// <summary>
@@ -66,7 +168,33 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileVarDec()
 		{
+			WriteL("<varDec>");
+			_indentLevel++;
+			if (!_tokenizer.HasMoreTokens()) return;
+			if (_tokenizer.IsSubroutineVarType())
+			{
+				WriteTerminalElem();
+			}
 
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			CompileVarTypeVarName();
+
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			while (_tokenizer.IsComma())
+			{
+				WriteTerminalElem();
+				if (!_tokenizer.HasMoreTokens()) return;
+				_tokenizer.Advance();
+				WriteTerminalElem();
+				if (!_tokenizer.HasMoreTokens()) return;
+				_tokenizer.Advance();
+			}
+
+			Eat(";");
+			_indentLevel--;
+			WriteL("</varDec>");
 		}
 
 		/// <summary>
@@ -77,6 +205,50 @@ namespace JackAnalyzer
 			// Uses a loop to handle 0 or more statement instances, according to the left-most token
 			// if that token is "if", "while"
 			// it invokes compileIf, compileWhile, ...
+		}
+
+		/// <summary>
+		/// Compiles a do statement
+		/// </summary>
+		public void CompileDo()
+		{
+
+		}
+
+		/// <summary>
+		/// Compiles a let statement
+		/// </summary>
+		public void CompileLet()
+		{
+
+		}
+
+		/// <summary>
+		/// Compiles a while statement
+		/// </summary>
+		public void CompileWhile()
+		{
+			Eat("while");
+			Eat("(");
+			CompileExpression();
+			Eat(")");
+			// more...
+		}
+
+		/// <summary>
+		/// Compiles a return statement
+		/// </summary>
+		public void CompileReturn()
+		{
+
+		}
+
+		/// <summary>
+		/// Compiles an if statement, possible with a trailing else clause
+		/// </summary>
+		public void CompileIf()
+		{
+
 		}
 
 		/// <summary>
@@ -105,56 +277,64 @@ namespace JackAnalyzer
 
 		}
 
-		/// <summary>
-		/// Compiles a let statement
-		/// </summary>
-		public void CompileLet()
+		private void CompileName()
 		{
-
+			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
+			{
+				WriteTerminalElem();
+			}
+			else
+			{
+				throw new Exception("Expect a name. Found: " + _tokenizer.GetCurrentToken());
+			}
 		}
 
-		/// <summary>
-		/// Compiles an if statement, possible with a trailing else clause
-		/// </summary>
-		public void CompileIf()
+		private void CompileType(bool isAllowedType)
 		{
-
+			if (isAllowedType)
+			{
+				WriteTerminalElem();
+			}
+			else
+			{
+				throw new Exception("Expect a type. Found: " + _tokenizer.GetCurrentToken());
+			}
 		}
 
-		/// <summary>
-		/// Compiles a while statement
-		/// </summary>
-		public void CompileWhile()
+		private void CompileVarTypeVarName()
 		{
-			Eat("while");
-			Eat("(");
-			CompileExpression();
-			Eat(")");
-			// more...
-		}
+			// TODO: come up with a better way to check if it's a valid type
+			CompileType(_tokenizer.IsVarType());
 
-		/// <summary>
-		/// Compiles a do statement
-		/// </summary>
-		public void CompileDo()
-		{
-
-		}
-
-		/// <summary>
-		/// Compiles a return statement
-		/// </summary>
-		public void CompileReturn()
-		{
-
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+			CompileName();
 		}
 
 		private void Eat(string expectedToken)
 		{
-			// if currentToken != expectedToken
-			// throw error
-			// else
-			// advance to the next token
+			string curToken = _tokenizer.GetCurrentToken();
+			if (curToken != expectedToken)
+			{
+				throw new Exception("Exptected: " + expectedToken + " Found: " + curToken);
+			}
+
+			WriteTerminalElem();
+			if (!_tokenizer.HasMoreTokens()) return;
+			_tokenizer.Advance();
+		}
+
+		private void WriteTerminalElem()
+		{
+			string curToken = _tokenizer.GetCurrentToken();
+			string tokenTypeStr = JackTokenizer.TokenTypeStr[_tokenizer.GetTokenType()];
+			WriteL("<" + tokenTypeStr + "> " + curToken + " </" + tokenTypeStr + ">");
+		}
+
+		private void WriteL(string text)
+		{
+			//_streamWriter.WriteLine(new string(' ', indentLevel * 2) + text);
+			Console.WriteLine(new string(' ', _indentLevel * 2) + text);
 		}
 	}
 }
