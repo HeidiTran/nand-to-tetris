@@ -1,0 +1,144 @@
+function Utils.drawScreenBorder 0
+push constant 0
+push constant 0
+push constant 511
+push constant 2
+call Screen.drawRectangle 4
+pop temp 0
+push constant 507
+push constant 0
+push constant 511
+push constant 255
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+push constant 0
+push constant 4
+push constant 255
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+push constant 253
+push constant 511
+push constant 255
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Utils.isSquareInScreen 1
+call Utils.getJumpSize 0
+pop local 0
+push argument 0
+push argument 1
+call Utils.isCoorInScreen 2
+push argument 0
+push local 0
+add
+push argument 1
+call Utils.isCoorInScreen 2
+and
+push argument 0
+push local 0
+add
+push argument 1
+push local 0
+add
+call Utils.isCoorInScreen 2
+and
+push argument 0
+push argument 1
+push local 0
+add
+call Utils.isCoorInScreen 2
+and
+return
+function Utils.isCoorInScreen 0
+push argument 0
+push constant 1
+neg
+gt
+push argument 0
+push constant 513
+lt
+and
+push argument 1
+push constant 1
+neg
+gt
+and
+push argument 1
+push constant 257
+lt
+and
+return
+function Utils.getJumpSize 0
+call SnakeChunk.getChunkSize 0
+push constant 3
+add
+return
+function Utils.isTouchingWall 0
+push argument 0
+push argument 1
+call Utils.isSquareInScreen 2
+not
+return
+function Utils.drawSquare 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push argument 0
+push argument 1
+push argument 0
+push argument 2
+add
+push argument 1
+push argument 2
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Utils.eraseSquare 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push argument 0
+push argument 1
+push argument 0
+push argument 2
+add
+push argument 1
+push argument 2
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Utils.mod 2
+push argument 0
+push argument 1
+call Math.divide 2
+pop local 0
+push argument 0
+push argument 1
+push local 0
+call Math.multiply 2
+sub
+pop local 1
+push local 1
+return
+function Utils.getMemValForCoor 1
+push constant 32
+push argument 1
+call Math.multiply 2
+push argument 0
+push constant 16
+call Math.divide 2
+add
+pop local 0
+push constant 16384
+push local 0
+add
+call Memory.peek 1
+return

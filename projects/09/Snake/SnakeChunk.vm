@@ -1,0 +1,70 @@
+function SnakeChunk.new 0
+push constant 4
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push constant 0
+pop this 2
+call SnakeChunk.getChunkSize 0
+pop this 3
+push pointer 0
+call SnakeChunk.draw 1
+pop temp 0
+push pointer 0
+return
+function SnakeChunk.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function SnakeChunk.draw 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 3
+call Utils.drawSquare 3
+pop temp 0
+push constant 0
+return
+function SnakeChunk.erase 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 3
+call Utils.eraseSquare 3
+pop temp 0
+push constant 0
+return
+function SnakeChunk.getNextChunk 0
+push argument 0
+pop pointer 0
+push this 2
+return
+function SnakeChunk.getX 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function SnakeChunk.getY 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function SnakeChunk.setNextChunk 0
+push argument 0
+pop pointer 0
+push argument 1
+pop this 2
+push constant 0
+return
+function SnakeChunk.getChunkSize 0
+push constant 9
+return

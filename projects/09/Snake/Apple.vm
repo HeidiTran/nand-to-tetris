@@ -1,0 +1,104 @@
+function Apple.new 0
+push constant 2
+call Memory.alloc 1
+pop pointer 0
+call Utils.getJumpSize 0
+pop static 0
+push constant 3
+pop static 1
+push pointer 0
+push argument 0
+call Apple.getRandomX 2
+pop this 0
+push pointer 0
+push argument 1
+call Apple.getRandomY 2
+pop this 1
+push pointer 0
+call Apple.draw 1
+pop temp 0
+push pointer 0
+return
+function Apple.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Apple.draw 1
+push argument 0
+pop pointer 0
+push constant 2
+push static 1
+call Math.multiply 2
+pop local 0
+push this 0
+push static 1
+add
+push this 1
+push static 1
+call Utils.drawSquare 3
+pop temp 0
+push this 0
+push static 1
+add
+push this 1
+push local 0
+add
+push static 1
+call Utils.drawSquare 3
+pop temp 0
+push this 0
+push this 1
+push static 1
+add
+push static 1
+call Utils.drawSquare 3
+pop temp 0
+push this 0
+push local 0
+add
+push this 1
+push static 1
+add
+push static 1
+call Utils.drawSquare 3
+pop temp 0
+push constant 0
+return
+function Apple.getRandomX 1
+push argument 0
+pop pointer 0
+push argument 1
+call RandNumGen.getRandNum 1
+pop local 0
+push local 0
+push static 0
+call Math.multiply 2
+push constant 5
+add
+return
+function Apple.getRandomY 1
+push argument 0
+pop pointer 0
+push argument 1
+call RandNumGen.getRandNum 1
+pop local 0
+push local 0
+push static 0
+call Math.multiply 2
+push constant 3
+add
+return
+function Apple.getX 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Apple.getY 0
+push argument 0
+pop pointer 0
+push this 1
+return
