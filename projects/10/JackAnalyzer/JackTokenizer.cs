@@ -154,6 +154,15 @@ namespace JackAnalyzer
 			}
 		}
 
+		/// <summary>
+		/// Should only be called when HasMoreTokens() return true
+		/// </summary>
+		/// <returns>The next character</returns>
+		public string LookOneCharAhead()
+		{
+			return ((char)_streamReader.Peek()).ToString();
+		}
+
 		private void IgnoreWhiteSpaceAndNewLine()
 		{
 			int nextToken = _streamReader.Peek();
@@ -391,9 +400,19 @@ namespace JackAnalyzer
 			return GetTokenType() == TokenType.SYMBOL && _currentToken == ")";
 		}
 
+		public bool IsOpenSquareBracket()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == "[";
+		}
+
 		public bool IsDot()
 		{
 			return GetTokenType() == TokenType.SYMBOL && _currentToken == ".";
+		}
+
+		public bool IsUnaryOp()
+		{
+			return GetTokenType() == TokenType.SYMBOL && (_currentToken == "-" || _currentToken == "~");
 		}
 
 		private static readonly HashSet<string> _varTypes = new()

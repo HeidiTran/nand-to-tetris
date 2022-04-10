@@ -24,7 +24,7 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileClass()
 		{
-			if (!_tokenizer.HasMoreTokens()) return; 
+			if (!_tokenizer.HasMoreTokens()) return;
 			_tokenizer.Advance();
 			WriteL("<class>");
 			_indentLevel++;
@@ -32,7 +32,6 @@ namespace JackAnalyzer
 			Eat("class");
 			MustHaveMoreTokens();
 			CompileName();
-			MustHaveMoreTokens();
 			Eat("{");
 			MustHaveMoreTokens();
 			while (_tokenizer.IsClassVarType())
@@ -69,13 +68,12 @@ namespace JackAnalyzer
 		public void CompileClassVarDec()
 		{
 			CompileVarTypeVarName();
-			MustHaveMoreTokens();
 
 			while (_tokenizer.IsComma())
 			{
-				WriteTerminalElem();	// ,
+				WriteTerminalElem();    // ,
 				MustHaveMoreTokens();
-				WriteTerminalElem();	// identifier
+				WriteTerminalElem();    // identifier
 				MustHaveMoreTokens();
 			}
 			Eat(";");
@@ -88,9 +86,7 @@ namespace JackAnalyzer
 		{
 			// TODO: come up with a better way to check if it's a valid type
 			CompileType(_tokenizer.IsSubroutineType());
-			MustHaveMoreTokens();
 			CompileName();
-			MustHaveMoreTokens();
 			Eat("(");
 			MustHaveMoreTokens();
 
@@ -118,14 +114,12 @@ namespace JackAnalyzer
 			if (_tokenizer.IsVarType())
 			{
 				CompileVarTypeVarName();
-				MustHaveMoreTokens();
 
 				while (_tokenizer.IsComma())
 				{
 					WriteTerminalElem();    // ,
 					MustHaveMoreTokens();
 					CompileVarTypeVarName();
-					MustHaveMoreTokens();
 				}
 			}
 		}
@@ -159,7 +153,6 @@ namespace JackAnalyzer
 		public void CompileVarDec()
 		{
 			CompileVarTypeVarName();
-			MustHaveMoreTokens();
 
 			while (_tokenizer.IsComma())
 			{
@@ -236,21 +229,22 @@ namespace JackAnalyzer
 					MustHaveMoreTokens();
 					CompileExpressionList();
 					Eat(")");
-				} else if (_tokenizer.IsDot())
+				}
+				else if (_tokenizer.IsDot())
 				{
 					Eat(".");
 					MustHaveMoreTokens();
 					CompileName();
-					MustHaveMoreTokens();
 					Eat("(");
 					MustHaveMoreTokens();
 					CompileExpressionList();
 					Eat(")");
-				} else
+				}
+				else
 				{
 					throw new Exception("Expected a '(' or a '.'. Found: " + _tokenizer.GetCurrentToken());
 				}
-			} 
+			}
 			else
 			{
 				throw new Exception("Subroutine call must begin with a function name, class name or a var name");
@@ -266,14 +260,21 @@ namespace JackAnalyzer
 			_indentLevel++;
 			Eat("let");
 			MustHaveMoreTokens();
-			// TODO: Support arr[0][1][2]
 			CompileName();
-			MustHaveMoreTokens();
+
+			while (_tokenizer.IsOpenSquareBracket())
+			{
+				Eat("[");
+				MustHaveMoreTokens();
+				CompileExpression();
+				Eat("]");
+				MustHaveMoreTokens();
+			}
+
 			Eat("=");
 			MustHaveMoreTokens();
 
 			CompileExpression();
-
 			Eat(";");
 			_indentLevel--;
 			WriteL("</letStatement>");
@@ -314,8 +315,9 @@ namespace JackAnalyzer
 			MustHaveMoreTokens();
 			if (_tokenizer.IsSemiColon())
 			{
-				WriteTerminalElem();	// ;
-			} else
+				WriteTerminalElem();    // ;
+			}
+			else
 			{
 				CompileExpression();
 				Eat(";");
@@ -342,7 +344,7 @@ namespace JackAnalyzer
 			Eat("{");
 			MustHaveMoreTokens();
 			CompileStatements();
-			Eat("}");			
+			Eat("}");
 			MustHaveMoreTokens();
 
 			if (_tokenizer.IsElseKw())
@@ -367,20 +369,16 @@ namespace JackAnalyzer
 		{
 			WriteL("<expression>");
 			_indentLevel++;
-			WriteL("<term>");
-			_indentLevel++;
+
 			CompileTerm();
-			_indentLevel--;
-			WriteL("</term>");
 			MustHaveMoreTokens();
-			while(_tokenizer.IsOp())
+			while (_tokenizer.IsOp())
 			{
 				WriteTerminalElem();
 				MustHaveMoreTokens();
 				CompileTerm();
 				MustHaveMoreTokens();
 			}
-			// TODO: Test (op term)*
 			_indentLevel--;
 			WriteL("</expression>");
 		}
@@ -392,6 +390,8 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileTerm()
 		{
+			WriteL("<term>");
+			_indentLevel++;
 			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
 			if (tokenType == JackTokenizer.TokenType.INT_CONST ||
 				tokenType == JackTokenizer.TokenType.STRING_CONST ||
@@ -401,10 +401,45 @@ namespace JackAnalyzer
 			}
 			else if (tokenType == JackTokenizer.TokenType.IDENTIFIER)
 			{
-				WriteTerminalElem();	// case varName
-				// TODO: distinguise between varname, varname[expression] and subroutineCall
+				if (!_tokenizer.HasMoreTokens())
+				{
+					throw new Exception("Unfinished structure");
+				}
+				string nextChar = _tokenizer.LookOneCharAhead();
+				if (nextChar == "[")
+				{
+					WriteTerminalElem();    // varName
+					MustHaveMoreTokens();
+					Eat("[");
+					MustHaveMoreTokens();
+					CompileExpression();
+					Eat("]");
+				} else if (nextChar == "(" || nextChar == ".") {
+					CompileSubroutineCall();
+				} else
+				{
+					WriteTerminalElem();    // case varName
+				}
 			}
-			// TODO: support ( expression ), unaryOp term
+			else if (_tokenizer.IsOpenParen())
+			{
+				Eat("(");
+				MustHaveMoreTokens();
+				CompileExpression();
+				Eat(")");
+			}
+			else if (_tokenizer.IsUnaryOp())
+			{
+				WriteTerminalElem();
+				MustHaveMoreTokens();
+				CompileTerm();
+			}
+			else
+			{
+				throw new Exception("Unknown term structure. Found: " + _tokenizer.GetCurrentToken());
+			}
+			_indentLevel--;
+			WriteL("</term>");
 		}
 
 		/// <summary>
@@ -414,7 +449,7 @@ namespace JackAnalyzer
 		{
 			WriteL("<expressionList>");
 			_indentLevel++;
-			
+
 			if (!_tokenizer.IsCloseParen())
 			{
 				CompileExpression();
@@ -436,6 +471,7 @@ namespace JackAnalyzer
 			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
 			{
 				WriteTerminalElem();
+				MustHaveMoreTokens();
 			}
 			else
 			{
@@ -448,6 +484,7 @@ namespace JackAnalyzer
 			if (isAllowedType)
 			{
 				WriteTerminalElem();
+				MustHaveMoreTokens();
 			}
 			else
 			{
@@ -459,7 +496,6 @@ namespace JackAnalyzer
 		{
 			// TODO: come up with a better way to check if it's a valid type
 			CompileType(_tokenizer.IsVarType());
-			MustHaveMoreTokens();
 			CompileName();
 		}
 
@@ -492,7 +528,8 @@ namespace JackAnalyzer
 			if (!_tokenizer.HasMoreTokens())
 			{
 				throw new Exception("Incomplete structure!");
-			} else
+			}
+			else
 			{
 				_tokenizer.Advance();
 			}
