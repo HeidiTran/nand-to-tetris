@@ -466,6 +466,11 @@ namespace JackAnalyzer
 			WriteL("</expressionList>");
 		}
 
+		public void Close()
+		{
+			_streamWriter.Close();
+		}
+
 		private void CompileName()
 		{
 			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
@@ -519,8 +524,7 @@ namespace JackAnalyzer
 
 		private void WriteL(string text)
 		{
-			//_streamWriter.WriteLine(new string(' ', indentLevel * 2) + text);
-			Console.WriteLine(new string(' ', _indentLevel * 2) + text);
+			_streamWriter.WriteLine(new string(' ', _indentLevel * 2) + text);
 		}
 
 		private void MustHaveMoreTokens()

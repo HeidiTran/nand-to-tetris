@@ -351,6 +351,11 @@ namespace JackAnalyzer
 			return _currentToken;
 		}
 
+		public void Close()
+		{
+			_streamReader.Close();
+		}
+
 		public bool IsClassVarType()
 		{
 			return GetTokenType() == TokenType.KEYWORD && (

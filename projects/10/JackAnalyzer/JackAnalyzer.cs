@@ -1,5 +1,4 @@
-﻿using System;
-using static JackAnalyzer.JackTokenizer;
+﻿using System.IO;
 
 namespace JackAnalyzer
 {
@@ -8,26 +7,35 @@ namespace JackAnalyzer
 		static void Main(string[] args)
 		{
 			// Input: a single fileName.jack or a dir
-
-			/*
-			 For each file, goes through the following logic:
-			- Creates a JackTokenizer from fileName.jack
-			- Creates an output file name fileName.xml
-			- Creates and uses a CompilationEngine to compile the input JackTokenizer into the output file
-			 */
-
 			// JackAnalyzer.exe Main.jack
-			// string inputPath = args[0];
+			string inputPath = args[0];
 
 			// For debugging in VisualStudio
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ArrayTest\Main.jack";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\Main.jack";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\Square.jack";
-			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\SquareGame.jack";
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ExpressionLessSquare\test.jack";
+			// string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ArrayTest";
+			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ExpressionLessSquare\test.jack";
+
+			bool isDir = Directory.Exists(inputPath);
+			if (!isDir)
+			{
+				CompileJackFile(inputPath);
+			}
+			else
+			{
+				string[] jackFiles = Directory.GetFiles(inputPath, "*.jack");
+				foreach (string jackFile in jackFiles)
+				{
+					CompileJackFile(jackFile);
+				}
+			}
+		}
+
+		private static void CompileJackFile(string inputPath)
+		{
 			JackTokenizer tokenizer = new(inputPath);
-			CompilationEngine compilationEngine = new(tokenizer, "test.xml");
+			CompilationEngine compilationEngine = new(tokenizer, inputPath.Replace(".jack", ".xml"));
 			compilationEngine.CompileClass();
+			tokenizer.Close();
+			compilationEngine.Close();
 		}
 	}
 }
