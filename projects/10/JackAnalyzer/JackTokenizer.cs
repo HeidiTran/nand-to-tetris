@@ -354,17 +354,46 @@ namespace JackAnalyzer
 			return GetTokenType() == TokenType.KEYWORD && _currentToken == "var";
 		}
 
+		private static readonly HashSet<string> _subroutineKws = new()
+		{
+			"constructor",
+			"function",
+			"method"
+		};
+
 		public bool IsSubroutineKw()
 		{
-			return GetTokenType() == TokenType.KEYWORD && (
-				_currentToken == "constructor" || 
-				_currentToken == "function" || 
-				_currentToken == "method");
+			return GetTokenType() == TokenType.KEYWORD && _subroutineKws.Contains(_currentToken);
+		}
+
+		public bool IsElseKw()
+		{
+			return GetTokenType() == TokenType.KEYWORD && _currentToken == "else";
 		}
 
 		public bool IsComma()
 		{
 			return GetTokenType() == TokenType.SYMBOL && _currentToken == ",";
+		}
+
+		public bool IsSemiColon()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == ";";
+		}
+
+		public bool IsOpenParen()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == "(";
+		}
+
+		public bool IsCloseParen()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == ")";
+		}
+
+		public bool IsDot()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _currentToken == ".";
 		}
 
 		private static readonly HashSet<string> _varTypes = new()
@@ -382,6 +411,36 @@ namespace JackAnalyzer
 		public bool IsSubroutineType()
 		{
 			return _varTypes.Contains(_currentToken) || GetTokenType() == TokenType.IDENTIFIER || _currentToken == "void";
+		}
+
+		private static readonly HashSet<string> _statementTypes = new()
+		{
+			"let",
+			"if",
+			"while",
+			"do",
+			"return"
+		};
+
+		public bool IsStatementType()
+		{
+			return GetTokenType() == TokenType.KEYWORD && _statementTypes.Contains(_currentToken);
+		}
+
+		public bool IsKeywordConst()
+		{
+			return GetTokenType() == TokenType.KEYWORD &&
+				(GetKeyWord() == KeyWord.TRUE ||
+				GetKeyWord() == KeyWord.FALSE ||
+				GetKeyWord() == KeyWord.NULL ||
+				GetKeyWord() == KeyWord.THIS);
+		}
+
+		private static readonly HashSet<string> _ops = new() { "+", "-", "*", "/", "&", "|", "<", ">", "=" };
+
+		public bool IsOp()
+		{
+			return GetTokenType() == TokenType.SYMBOL && _ops.Contains(_currentToken);
 		}
 	}
 }

@@ -26,7 +26,7 @@ namespace JackAnalyzer
 			//string inputPath = @"C:\Projects\nand-to-tetris\projects\10\Square\SquareGame.jack";
 			string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ExpressionLessSquare\test.jack";
 			JackTokenizer tokenizer = new(inputPath);
-			CompilationEngine compilationEngine = new CompilationEngine(tokenizer, "test.xml");
+			CompilationEngine compilationEngine = new(tokenizer, "test.xml");
 			compilationEngine.CompileClass();
 		}
 	}
