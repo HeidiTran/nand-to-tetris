@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 /// <summary>
@@ -19,6 +20,13 @@ namespace JackAnalyzer
 			_indentLevel = 0;
 		}
 
+		private static readonly HashSet<JackTokenizer.KeyWord> _subroutineKws = new()
+		{
+			JackTokenizer.KeyWord.CONSTRUCTOR,
+			JackTokenizer.KeyWord.FUNCTION,
+			JackTokenizer.KeyWord.METHOD
+		};
+
 		/// <summary>
 		/// Compiles a complete class.
 		/// </summary>
@@ -29,33 +37,21 @@ namespace JackAnalyzer
 			WriteL("<class>");
 			_indentLevel++;
 
+			// class: 'class' className '{' classVarDec* subroutineDec* '}'
 			Eat("class");
 			MustHaveMoreTokens();
 			CompileName();
 			Eat("{");
 			MustHaveMoreTokens();
-			while (_tokenizer.IsClassVarType())
+			while (IsKeyword("static") || IsKeyword("field"))
 			{
-				WriteL("<classVarDec>");
-				_indentLevel++;
-				WriteTerminalElem();
-				MustHaveMoreTokens();
 				CompileClassVarDec();
-				_indentLevel--;
-				WriteL("</classVarDec>");
-				MustHaveMoreTokens();
 			}
 
-			while (_tokenizer.IsSubroutineKw())
+			while (_tokenizer.GetTokenType() == JackTokenizer.TokenType.KEYWORD &&
+				_subroutineKws.Contains(_tokenizer.GetKeyWord()))
 			{
-				WriteL("<subroutineDec>");
-				_indentLevel++;
-				WriteTerminalElem();
-				MustHaveMoreTokens();
 				CompileSubroutineDec();
-				_indentLevel--;
-				WriteL("</subroutineDec>");
-				MustHaveMoreTokens();
 			}
 			Eat("}");
 			_indentLevel--;
@@ -67,16 +63,25 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileClassVarDec()
 		{
+			WriteL("<classVarDec>");
+			_indentLevel++;
+
+			// classVarDec: ('static' | 'field') type varName (',' varName)* ';'
+			WriteKeyword();
+			MustHaveMoreTokens();
 			CompileVarTypeVarName();
 
-			while (_tokenizer.IsComma())
+			while (IsSymbol(','))
 			{
-				WriteTerminalElem();    // ,
+				WriteSymbol();
 				MustHaveMoreTokens();
-				WriteTerminalElem();    // identifier
-				MustHaveMoreTokens();
+				CompileName();
 			}
 			Eat(";");
+
+			_indentLevel--;
+			WriteL("</classVarDec>");
+			MustHaveMoreTokens();
 		}
 
 		/// <summary>
@@ -84,26 +89,30 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileSubroutineDec()
 		{
-			// TODO: come up with a better way to check if it's a valid type
-			CompileType(_tokenizer.IsSubroutineType());
+			WriteL("<subroutineDec>");
+			_indentLevel++;
+
+			// subroutineDec: ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
+			WriteKeyword();
+			MustHaveMoreTokens();
+
+			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
+			bool isBoolOrIntOrChar = tokenType == JackTokenizer.TokenType.KEYWORD &&
+				_varTypes.Contains(_tokenizer.GetKeyWord());
+			bool isVoid = tokenType == JackTokenizer.TokenType.KEYWORD &&
+				_tokenizer.GetKeyWord() == JackTokenizer.KeyWord.VOID;
+			CompileType(tokenType == JackTokenizer.TokenType.IDENTIFIER || isBoolOrIntOrChar || isVoid);
 			CompileName();
 			Eat("(");
 			MustHaveMoreTokens();
-
-			WriteL("<parameterList>");
-			_indentLevel++;
 			CompileParameterList();
-			_indentLevel--;
-			WriteL("</parameterList>");
-
 			Eat(")");
 			MustHaveMoreTokens();
-
-			WriteL("<subroutineBody>");
-			_indentLevel++;
 			CompileSubroutineBody();
+
 			_indentLevel--;
-			WriteL("</subroutineBody>");
+			WriteL("</subroutineDec>");
+			MustHaveMoreTokens();
 		}
 
 		/// <summary>
@@ -111,17 +120,24 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileParameterList()
 		{
-			if (_tokenizer.IsVarType())
+			WriteL("<parameterList>");
+			_indentLevel++;
+
+			// paramterList: ((type varName) (',' type varName)*)?
+			if (!IsSymbol(')'))
 			{
 				CompileVarTypeVarName();
 
-				while (_tokenizer.IsComma())
+				while (IsSymbol(','))
 				{
-					WriteTerminalElem();    // ,
+					WriteSymbol();
 					MustHaveMoreTokens();
 					CompileVarTypeVarName();
 				}
 			}
+
+			_indentLevel--;
+			WriteL("</parameterList>");
 		}
 
 		/// <summary>
@@ -129,22 +145,21 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileSubroutineBody()
 		{
+			WriteL("<subroutineBody>");
+			_indentLevel++;
+
+			// subroutineBody: '{' varDec* statements '}'
 			Eat("{");
 			MustHaveMoreTokens();
-			while (_tokenizer.IsSubroutineVarType())
+			while (IsKeyword("var"))
 			{
-				WriteL("<varDec>");
-				_indentLevel++;
-				WriteTerminalElem();    // var
-				MustHaveMoreTokens();
 				CompileVarDec();
-				_indentLevel--;
-				WriteL("</varDec>");
-				MustHaveMoreTokens();
 			}
 
 			CompileStatements();
 			Eat("}");
+			_indentLevel--;
+			WriteL("</subroutineBody>");
 		}
 
 		/// <summary>
@@ -152,17 +167,35 @@ namespace JackAnalyzer
 		/// </summary>
 		public void CompileVarDec()
 		{
+			WriteL("<varDec>");
+			_indentLevel++;
+
+			// varDec: 'var' type varName (',' varName)* ';'
+			WriteKeyword();
+			MustHaveMoreTokens();
 			CompileVarTypeVarName();
 
-			while (_tokenizer.IsComma())
+			while (IsSymbol(','))
 			{
-				WriteTerminalElem();    // ,
+				WriteSymbol();
 				MustHaveMoreTokens();
-				WriteTerminalElem();    // identifier
-				MustHaveMoreTokens();
+				CompileName();
 			}
 			Eat(";");
+
+			_indentLevel--;
+			WriteL("</varDec>");
+			MustHaveMoreTokens();
 		}
+
+		private static readonly HashSet<JackTokenizer.KeyWord> _statementTypes = new()
+		{
+			JackTokenizer.KeyWord.LET,
+			JackTokenizer.KeyWord.IF,
+			JackTokenizer.KeyWord.WHILE,
+			JackTokenizer.KeyWord.DO,
+			JackTokenizer.KeyWord.RETURN
+		};
 
 		/// <summary>
 		/// Compiles a sequence of statements. Does not handle the enclosing "()"
@@ -172,7 +205,9 @@ namespace JackAnalyzer
 			WriteL("<statements>");
 			_indentLevel++;
 
-			while (_tokenizer.IsStatementType())
+			// statments: statement*
+			while (_tokenizer.GetTokenType() == JackTokenizer.TokenType.KEYWORD &&
+				_statementTypes.Contains(_tokenizer.GetKeyWord()))
 			{
 				switch (_tokenizer.GetKeyWord())
 				{
@@ -219,35 +254,35 @@ namespace JackAnalyzer
 
 		public void CompileSubroutineCall()
 		{
-			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
+			// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
+			CompileName();
+
+			if (_tokenizer.GetTokenType() != JackTokenizer.TokenType.SYMBOL)
 			{
-				WriteTerminalElem();
+				throw new Exception("Expected a symbol. Found: " + _tokenizer.GetCurrentToken());
+			}
+
+			char symbol = _tokenizer.GetSymbol();
+			if (symbol == '(')
+			{
+				Eat("(");
 				MustHaveMoreTokens();
-				if (_tokenizer.IsOpenParen())
-				{
-					Eat("(");
-					MustHaveMoreTokens();
-					CompileExpressionList();
-					Eat(")");
-				}
-				else if (_tokenizer.IsDot())
-				{
-					Eat(".");
-					MustHaveMoreTokens();
-					CompileName();
-					Eat("(");
-					MustHaveMoreTokens();
-					CompileExpressionList();
-					Eat(")");
-				}
-				else
-				{
-					throw new Exception("Expected a '(' or a '.'. Found: " + _tokenizer.GetCurrentToken());
-				}
+				CompileExpressionList();
+				Eat(")");
+			}
+			else if (symbol == '.')
+			{
+				Eat(".");
+				MustHaveMoreTokens();
+				CompileName();
+				Eat("(");
+				MustHaveMoreTokens();
+				CompileExpressionList();
+				Eat(")");
 			}
 			else
 			{
-				throw new Exception("Subroutine call must begin with a function name, class name or a var name");
+				throw new Exception("Expected a '(' or a '.'. Found: " + _tokenizer.GetCurrentToken());
 			}
 		}
 
@@ -258,11 +293,13 @@ namespace JackAnalyzer
 		{
 			WriteL("<letStatement>");
 			_indentLevel++;
+
+			// letStatement: 'let' varName ('[' expression ']')? '=' expression ';'
 			Eat("let");
 			MustHaveMoreTokens();
 			CompileName();
 
-			while (_tokenizer.IsOpenSquareBracket())
+			while (IsSymbol('['))
 			{
 				Eat("[");
 				MustHaveMoreTokens();
@@ -273,9 +310,9 @@ namespace JackAnalyzer
 
 			Eat("=");
 			MustHaveMoreTokens();
-
 			CompileExpression();
 			Eat(";");
+
 			_indentLevel--;
 			WriteL("</letStatement>");
 			MustHaveMoreTokens();
@@ -288,6 +325,8 @@ namespace JackAnalyzer
 		{
 			WriteL("<whileStatement>");
 			_indentLevel++;
+
+			// whileStatement: '(' expression ')' '{' statements '}'
 			Eat("while");
 			MustHaveMoreTokens();
 			Eat("(");
@@ -311,11 +350,13 @@ namespace JackAnalyzer
 		{
 			WriteL("<returnStatement>");
 			_indentLevel++;
+
+			// returnStatement: 'return' expression? ';'
 			Eat("return");
 			MustHaveMoreTokens();
-			if (_tokenizer.IsSemiColon())
+			if (IsSymbol(';'))
 			{
-				WriteTerminalElem();    // ;
+				WriteSymbol();
 			}
 			else
 			{
@@ -334,6 +375,9 @@ namespace JackAnalyzer
 		{
 			WriteL("<ifStatement>");
 			_indentLevel++;
+
+			// 'if' '(' expression ')' '{' statements '}'
+			// ('else' '{' statements '}') ?
 			Eat("if");
 			MustHaveMoreTokens();
 			Eat("(");
@@ -347,7 +391,7 @@ namespace JackAnalyzer
 			Eat("}");
 			MustHaveMoreTokens();
 
-			if (_tokenizer.IsElseKw())
+			if (IsKeyword("else"))
 			{
 				Eat("else");
 				MustHaveMoreTokens();
@@ -362,6 +406,8 @@ namespace JackAnalyzer
 			WriteL("</ifStatement>");
 		}
 
+		private static readonly HashSet<char> _ops = new() { '+', '-', '*', '/', '&', '|', '<', '>', '=' };
+
 		/// <summary>
 		/// Compiles an expression.
 		/// </summary>
@@ -370,17 +416,40 @@ namespace JackAnalyzer
 			WriteL("<expression>");
 			_indentLevel++;
 
+			// expression: term (op term)*
 			CompileTerm();
 			MustHaveMoreTokens();
-			while (_tokenizer.IsOp())
+			while (_tokenizer.GetTokenType() == JackTokenizer.TokenType.SYMBOL &&
+				_ops.Contains(_tokenizer.GetSymbol()))
 			{
-				WriteTerminalElem();
+				WriteSymbol();
 				MustHaveMoreTokens();
 				CompileTerm();
 				MustHaveMoreTokens();
 			}
 			_indentLevel--;
 			WriteL("</expression>");
+		}
+
+		private bool IsKeywordConst()
+		{
+			HashSet<JackTokenizer.KeyWord> keywordsConts = new()
+			{
+				JackTokenizer.KeyWord.TRUE,
+				JackTokenizer.KeyWord.FALSE,
+				JackTokenizer.KeyWord.NULL,
+				JackTokenizer.KeyWord.THIS
+			};
+
+			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.KEYWORD)
+			{
+				JackTokenizer.KeyWord kw = _tokenizer.GetKeyWord();
+				return keywordsConts.Contains(kw);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -393,11 +462,17 @@ namespace JackAnalyzer
 			WriteL("<term>");
 			_indentLevel++;
 			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
-			if (tokenType == JackTokenizer.TokenType.INT_CONST ||
-				tokenType == JackTokenizer.TokenType.STRING_CONST ||
-				_tokenizer.IsKeywordConst())
+			if (tokenType == JackTokenizer.TokenType.INT_CONST)
 			{
-				WriteTerminalElem();
+				WriteL("<integerConstant> " + _tokenizer.GetIntVal().ToString() + " </integerConstant>");
+			}
+			else if (tokenType == JackTokenizer.TokenType.STRING_CONST)
+			{
+				WriteL("<stringConstant> " + _tokenizer.GetStringVal() + " </stringConstant>");
+			}
+			else if (IsKeywordConst())
+			{
+				WriteKeyword();
 			}
 			else if (tokenType == JackTokenizer.TokenType.IDENTIFIER)
 			{
@@ -408,31 +483,41 @@ namespace JackAnalyzer
 				string nextChar = _tokenizer.LookOneCharAhead();
 				if (nextChar == "[")
 				{
-					WriteTerminalElem();    // varName
-					MustHaveMoreTokens();
+					CompileName();
 					Eat("[");
 					MustHaveMoreTokens();
 					CompileExpression();
 					Eat("]");
-				} else if (nextChar == "(" || nextChar == ".") {
-					CompileSubroutineCall();
-				} else
+				}
+				else if (nextChar == "(" || nextChar == ".")
 				{
-					WriteTerminalElem();    // case varName
+					CompileSubroutineCall();
+				}
+				else
+				{
+					WriteIdentifier();    // case varName
 				}
 			}
-			else if (_tokenizer.IsOpenParen())
+			else if (tokenType == JackTokenizer.TokenType.SYMBOL)
 			{
-				Eat("(");
-				MustHaveMoreTokens();
-				CompileExpression();
-				Eat(")");
-			}
-			else if (_tokenizer.IsUnaryOp())
-			{
-				WriteTerminalElem();
-				MustHaveMoreTokens();
-				CompileTerm();
+				char symbol = _tokenizer.GetSymbol();
+				if (symbol == '(')
+				{
+					Eat("(");
+					MustHaveMoreTokens();
+					CompileExpression();
+					Eat(")");
+				}
+				else if (symbol == '-' || symbol == '~')
+				{
+					WriteSymbol();
+					MustHaveMoreTokens();
+					CompileTerm();
+				}
+				else
+				{
+					throw new Exception("Illegal symbol. Found: " + _tokenizer.GetCurrentToken());
+				}
 			}
 			else
 			{
@@ -450,13 +535,14 @@ namespace JackAnalyzer
 			WriteL("<expressionList>");
 			_indentLevel++;
 
-			if (!_tokenizer.IsCloseParen())
+			// expressionList: (expression (',' expression)* )?
+			if (!IsSymbol(')'))
 			{
 				CompileExpression();
 
-				while (_tokenizer.IsComma())
+				while (IsSymbol(','))
 				{
-					WriteTerminalElem();    // ,
+					WriteSymbol();
 					MustHaveMoreTokens();
 					CompileExpression();
 				}
@@ -475,7 +561,7 @@ namespace JackAnalyzer
 		{
 			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
 			{
-				WriteTerminalElem();
+				WriteIdentifier();
 				MustHaveMoreTokens();
 			}
 			else
@@ -488,7 +574,15 @@ namespace JackAnalyzer
 		{
 			if (isAllowedType)
 			{
-				WriteTerminalElem();
+				JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
+				if (tokenType == JackTokenizer.TokenType.KEYWORD)
+				{
+					WriteKeyword();
+				}
+				else if (tokenType == JackTokenizer.TokenType.IDENTIFIER)
+				{
+					WriteIdentifier();
+				}
 				MustHaveMoreTokens();
 			}
 			else
@@ -497,29 +591,88 @@ namespace JackAnalyzer
 			}
 		}
 
+		private static readonly HashSet<JackTokenizer.KeyWord> _varTypes = new()
+		{
+			JackTokenizer.KeyWord.BOOLEAN,
+			JackTokenizer.KeyWord.INT,
+			JackTokenizer.KeyWord.CHAR
+		};
+
 		private void CompileVarTypeVarName()
 		{
-			// TODO: come up with a better way to check if it's a valid type
-			CompileType(_tokenizer.IsVarType());
+			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
+			bool isBoolOrIntOrChar = tokenType == JackTokenizer.TokenType.KEYWORD &&
+				_varTypes.Contains(_tokenizer.GetKeyWord());
+			CompileType(tokenType == JackTokenizer.TokenType.IDENTIFIER || isBoolOrIntOrChar);
 			CompileName();
 		}
 
 		private void Eat(string expectedToken)
 		{
-			string curToken = _tokenizer.GetCurrentToken();
-			if (curToken != expectedToken)
+			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
+			if (tokenType == JackTokenizer.TokenType.SYMBOL)
 			{
-				throw new Exception("Exptected: " + expectedToken + " Found: " + curToken);
+				string symbol = _tokenizer.GetSymbol().ToString();
+				if (symbol != expectedToken)
+				{
+					throw new Exception("Exptected: " + expectedToken + " Found: " + symbol);
+				}
+				WriteSymbol();
 			}
-
-			WriteTerminalElem();
+			else if (tokenType == JackTokenizer.TokenType.KEYWORD)
+			{
+				string kw = _tokenizer.GetKeyWord().ToString().ToLower();
+				if (kw != expectedToken)
+				{
+					throw new Exception("Exptected: " + expectedToken + " Found: " + kw);
+				}
+				WriteKeyword();
+			}
+			else
+			{
+				throw new Exception("Expected Symbol or Keyword. Found: " + tokenType.ToString());
+			}
 		}
 
-		private void WriteTerminalElem()
+		private void WriteIdentifier()
 		{
-			string curToken = _tokenizer.GetCurrentToken();
-			string tokenTypeStr = JackTokenizer.TokenTypeStr[_tokenizer.GetTokenType()];
-			WriteL("<" + tokenTypeStr + "> " + curToken + " </" + tokenTypeStr + ">");
+			WriteL("<identifier> " + _tokenizer.GetIdentifier() + " </identifier>");
+		}
+
+		private static readonly Dictionary<string, string> _symbolsToXMLConvention = new()
+		{
+			{ "<", "&lt;" },
+			{ ">", "&gt;" },
+			{ "\"", "&quot;" },
+			{ "&", "&amp;" }
+		};
+
+		private bool IsSymbol(char symbol)
+		{
+			return _tokenizer.GetTokenType() == JackTokenizer.TokenType.SYMBOL &&
+				_tokenizer.GetSymbol() == symbol;
+		}
+
+		private void WriteSymbol()
+		{
+			string symbol = _tokenizer.GetSymbol().ToString();
+			if (_symbolsToXMLConvention.ContainsKey(symbol))
+			{
+				symbol = _symbolsToXMLConvention[symbol];
+			}
+
+			WriteL("<symbol> " + symbol + " </symbol>");
+		}
+
+		private bool IsKeyword(string kw)
+		{
+			return _tokenizer.GetTokenType() == JackTokenizer.TokenType.KEYWORD &&
+				_tokenizer.GetKeyWord().ToString().ToLower() == kw;
+		}
+
+		private void WriteKeyword()
+		{
+			WriteL("<keyword> " + _tokenizer.GetKeyWord().ToString().ToLower() + " </keyword>");
 		}
 
 		private void WriteL(string text)

@@ -48,8 +48,27 @@ namespace JackAnalyzer
 			THIS
 		}
 
-		private static readonly HashSet<string> _symbols = new() { 
-			"{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*", "/", "&", "|", "<", ">", "=", "~" 
+		private static readonly HashSet<string> _symbols = new()
+		{
+			"{",
+			"}",
+			"(",
+			")",
+			"[",
+			"]",
+			".",
+			",",
+			";",
+			"+",
+			"-",
+			"*",
+			"/",
+			"&",
+			"|",
+			"<",
+			">",
+			"=",
+			"~"
 		};
 		private static readonly HashSet<string> _keywords = new()
 		{
@@ -75,14 +94,7 @@ namespace JackAnalyzer
 			"null",
 			"this"
 		};
-		public static readonly Dictionary<TokenType, string> TokenTypeStr = new()
-		{
-			{ TokenType.KEYWORD, "keyword" },
-			{ TokenType.SYMBOL, "symbol" },
-			{ TokenType.IDENTIFIER, "identifier" },
-			{ TokenType.INT_CONST, "integerConstant" },
-			{ TokenType.STRING_CONST, "stringConstant" }
-		};
+
 		private bool _isSlashButNotComment; // denotes a forward slash but not one for comment
 
 		public JackTokenizer(string jackFilePath)
@@ -112,7 +124,7 @@ namespace JackAnalyzer
 
 				if (nextToken == '/' || nextToken == '*')
 				{
-					IgnoreComment((char) nextToken);
+					IgnoreComment((char)nextToken);
 					return HasMoreTokens();
 				}
 
@@ -148,7 +160,8 @@ namespace JackAnalyzer
 			else if (short.TryParse(token.ToString(), out _))
 			{
 				_currentToken = ConsumeAllDigits(token);
-			} else
+			}
+			else
 			{
 				_currentToken = ConsumeKwOrIdentifier(token);
 			}
@@ -228,7 +241,7 @@ namespace JackAnalyzer
 		{
 			List<char> res = new() { firstToken };
 			int nextToken = _streamReader.Peek();
-			while (nextToken != -1 && !IsIgnoredTok((char) nextToken) && !_symbols.Contains(((char) nextToken).ToString()))
+			while (nextToken != -1 && !IsIgnoredTok((char)nextToken) && !_symbols.Contains(((char)nextToken).ToString()))
 			{
 				res.Add((char)_streamReader.Read());
 				nextToken = _streamReader.Peek();
@@ -328,143 +341,14 @@ namespace JackAnalyzer
 			return _currentToken[1..^1];
 		}
 
-		private static readonly Dictionary<string, string> _symbolsToXMLConvention = new()
-		{
-			{ "<", "&lt;" },
-			{ ">", "&gt;" },
-			{ "\"", "&quot;" },
-			{ "&", "&amp;" }
-		};
-
 		public string GetCurrentToken()
 		{
-			if (GetTokenType() == TokenType.STRING_CONST)
-			{
-				return _currentToken[1..^1];
-			}
-
-			if (_symbolsToXMLConvention.ContainsKey(_currentToken))
-			{
-				return _symbolsToXMLConvention[_currentToken];
-			}
-
 			return _currentToken;
 		}
 
 		public void Close()
 		{
 			_streamReader.Close();
-		}
-
-		public bool IsClassVarType()
-		{
-			return GetTokenType() == TokenType.KEYWORD && (
-				_currentToken == "static" || 
-				_currentToken == "field");
-		}
-
-		public bool IsSubroutineVarType()
-		{
-			return GetTokenType() == TokenType.KEYWORD && _currentToken == "var";
-		}
-
-		private static readonly HashSet<string> _subroutineKws = new()
-		{
-			"constructor",
-			"function",
-			"method"
-		};
-
-		public bool IsSubroutineKw()
-		{
-			return GetTokenType() == TokenType.KEYWORD && _subroutineKws.Contains(_currentToken);
-		}
-
-		public bool IsElseKw()
-		{
-			return GetTokenType() == TokenType.KEYWORD && _currentToken == "else";
-		}
-
-		public bool IsComma()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == ",";
-		}
-
-		public bool IsSemiColon()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == ";";
-		}
-
-		public bool IsOpenParen()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == "(";
-		}
-
-		public bool IsCloseParen()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == ")";
-		}
-
-		public bool IsOpenSquareBracket()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == "[";
-		}
-
-		public bool IsDot()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _currentToken == ".";
-		}
-
-		public bool IsUnaryOp()
-		{
-			return GetTokenType() == TokenType.SYMBOL && (_currentToken == "-" || _currentToken == "~");
-		}
-
-		private static readonly HashSet<string> _varTypes = new()
-		{
-			"boolean",
-			"int",
-			"char"
-		};
-
-		public bool IsVarType()
-		{
-			return _varTypes.Contains(_currentToken) || GetTokenType() == TokenType.IDENTIFIER;
-		}
-
-		public bool IsSubroutineType()
-		{
-			return _varTypes.Contains(_currentToken) || GetTokenType() == TokenType.IDENTIFIER || _currentToken == "void";
-		}
-
-		private static readonly HashSet<string> _statementTypes = new()
-		{
-			"let",
-			"if",
-			"while",
-			"do",
-			"return"
-		};
-
-		public bool IsStatementType()
-		{
-			return GetTokenType() == TokenType.KEYWORD && _statementTypes.Contains(_currentToken);
-		}
-
-		public bool IsKeywordConst()
-		{
-			return GetTokenType() == TokenType.KEYWORD &&
-				(GetKeyWord() == KeyWord.TRUE ||
-				GetKeyWord() == KeyWord.FALSE ||
-				GetKeyWord() == KeyWord.NULL ||
-				GetKeyWord() == KeyWord.THIS);
-		}
-
-		private static readonly HashSet<string> _ops = new() { "+", "-", "*", "/", "&", "|", "<", ">", "=" };
-
-		public bool IsOp()
-		{
-			return GetTokenType() == TokenType.SYMBOL && _ops.Contains(_currentToken);
 		}
 	}
 }
