@@ -171,9 +171,9 @@ namespace JackCompiler
 		/// Should only be called when HasMoreTokens() return true
 		/// </summary>
 		/// <returns>The next character</returns>
-		public string LookOneCharAhead()
+		public char LookOneCharAhead()
 		{
-			return ((char)_streamReader.Peek()).ToString();
+			return (char)_streamReader.Peek();
 		}
 
 		private void IgnoreWhiteSpaceAndNewLine()

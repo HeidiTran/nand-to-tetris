@@ -24,8 +24,8 @@ namespace JackCompiler
 			NONE
 		}
 
-		Dictionary<string, Tuple<string, Kind, int>> _classST;
-		Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
+		private Dictionary<string, Tuple<string, Kind, int>> _classST;
+		private Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
 
 		public SymbolTable()
 		{
@@ -147,6 +147,11 @@ namespace JackCompiler
 			}
 
 			return 0;
+		}
+
+		public bool IsInSymbolTable(string name)
+		{
+			return _subroutineST.ContainsKey(name) || _classST.ContainsKey(name);
 		}
 
 		private static bool IsClassScope(Kind kind)

@@ -11,7 +11,9 @@ namespace JackCompiler
 	{
 		private readonly StreamWriter _streamWriter;
 		private readonly JackTokenizer _tokenizer;
+		private SymbolTable _symbolTable;
 		private int _indentLevel;
+		private string _currentClassName;
 
 		public CompilationEngine(JackTokenizer tokenizer, string xmlFilePath)
 		{
@@ -33,6 +35,8 @@ namespace JackCompiler
 		public void CompileClass()
 		{
 			if (!_tokenizer.HasMoreTokens()) return;
+
+			_symbolTable = new();
 			_tokenizer.Advance();
 			WriteL("<class>");
 			_indentLevel++;
@@ -40,7 +44,9 @@ namespace JackCompiler
 			// class: 'class' className '{' classVarDec* subroutineDec* '}'
 			Eat("class");
 			MustHaveMoreTokens();
-			CompileName();
+			_currentClassName = _tokenizer.GetIdentifier();
+			WriteIdentifierNew(_currentClassName, "class", true, false, -1);	// className
+			MustHaveMoreTokens();
 			Eat("{");
 			MustHaveMoreTokens();
 			while (IsKeyword("static") || IsKeyword("field"))
@@ -66,16 +72,33 @@ namespace JackCompiler
 			WriteL("<classVarDec>");
 			_indentLevel++;
 
+			string name, type;
+			SymbolTable.Kind kind;
+
 			// classVarDec: ('static' | 'field') type varName (',' varName)* ';'
+			kind = Enum.Parse<SymbolTable.Kind>(_tokenizer.GetKeyWord().ToString());
+			if (kind != SymbolTable.Kind.STATIC && kind != SymbolTable.Kind.FIELD)
+			{
+				throw new Exception("Class variables must have static/field kind!");
+			}
+
 			WriteKeyword();
 			MustHaveMoreTokens();
-			CompileVarTypeVarName();
+
+			type = CompileTypeAndReturn();
+			name = CompileNameAndReturn();
+			_symbolTable.Define(name, type, kind);
+			WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
 
 			while (IsSymbol(','))
 			{
 				WriteSymbol();
 				MustHaveMoreTokens();
-				CompileName();
+
+				name = _tokenizer.GetIdentifier();
+				_symbolTable.Define(name, type, kind);
+				WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
+				MustHaveMoreTokens();
 			}
 			Eat(";");
 
@@ -89,6 +112,8 @@ namespace JackCompiler
 		/// </summary>
 		public void CompileSubroutineDec()
 		{
+			_symbolTable.StartSubroutine();
+			_symbolTable.Define("this", _currentClassName, SymbolTable.Kind.ARG);
 			WriteL("<subroutineDec>");
 			_indentLevel++;
 
@@ -102,7 +127,8 @@ namespace JackCompiler
 			bool isVoid = tokenType == JackTokenizer.TokenType.KEYWORD &&
 				_tokenizer.GetKeyWord() == JackTokenizer.KeyWord.VOID;
 			CompileType(tokenType == JackTokenizer.TokenType.IDENTIFIER || isBoolOrIntOrChar || isVoid);
-			CompileName();
+			WriteIdentifierNew(_tokenizer.GetIdentifier(), "subroutine", true, false, -1);	// subroutineName
+			MustHaveMoreTokens();
 			Eat("(");
 			MustHaveMoreTokens();
 			CompileParameterList();
@@ -126,13 +152,23 @@ namespace JackCompiler
 			// paramterList: ((type varName) (',' type varName)*)?
 			if (!IsSymbol(')'))
 			{
-				CompileVarTypeVarName();
+				string name, type;
+				SymbolTable.Kind kind = SymbolTable.Kind.ARG;
+
+				type = CompileTypeAndReturn();
+				name = CompileNameAndReturn();
+				_symbolTable.Define(name, type, kind);
+				WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
 
 				while (IsSymbol(','))
 				{
 					WriteSymbol();
 					MustHaveMoreTokens();
-					CompileVarTypeVarName();
+
+					type = CompileTypeAndReturn();
+					name = CompileNameAndReturn();
+					_symbolTable.Define(name, type, kind);
+					WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
 				}
 			}
 
@@ -171,15 +207,31 @@ namespace JackCompiler
 			_indentLevel++;
 
 			// varDec: 'var' type varName (',' varName)* ';'
+
+			string name, type;
+			SymbolTable.Kind kind;
+
+			kind = Enum.Parse<SymbolTable.Kind>(_tokenizer.GetKeyWord().ToString());
+			if (kind != SymbolTable.Kind.VAR)
+			{
+				throw new Exception("Variables must have var kind!");
+			}
 			WriteKeyword();
 			MustHaveMoreTokens();
-			CompileVarTypeVarName();
+
+			type = CompileTypeAndReturn();
+			name = CompileNameAndReturn();
+			_symbolTable.Define(name, type, kind);
+			WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
 
 			while (IsSymbol(','))
 			{
 				WriteSymbol();
 				MustHaveMoreTokens();
-				CompileName();
+				name = _tokenizer.GetIdentifier();
+				_symbolTable.Define(name, type, kind);
+				WriteIdentifierNew(name, kind.ToString().ToLower(), true, true, _symbolTable.IndexOf(name));
+				MustHaveMoreTokens();
 			}
 			Eat(";");
 
@@ -255,7 +307,27 @@ namespace JackCompiler
 		public void CompileSubroutineCall()
 		{
 			// subroutineCall: subroutineName '(' expressionList ')' | (className | varName) '.' subroutineName '(' expressionList ')'
-			CompileName();
+			char oneCharAhead = _tokenizer.LookOneCharAhead();
+			string name = _tokenizer.GetIdentifier();
+			if (oneCharAhead == '(')
+			{
+				WriteIdentifierNew(name, "subroutine", false, false, -1);
+			} else if (oneCharAhead == '.')
+			{
+				if (_symbolTable.IsInSymbolTable(name))
+				{
+					SymbolTable.Kind kind = _symbolTable.KindOf(name);
+					int idx = _symbolTable.IndexOf(name);
+					WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
+				} else
+				{
+					WriteIdentifierNew(name, "class", false, false, -1);	   // className
+				}
+			} else
+			{
+				throw new Exception("Unrecognized subroutine call structure!");
+			}
+			MustHaveMoreTokens();
 
 			if (_tokenizer.GetTokenType() != JackTokenizer.TokenType.SYMBOL)
 			{
@@ -274,7 +346,8 @@ namespace JackCompiler
 			{
 				Eat(".");
 				MustHaveMoreTokens();
-				CompileName();
+				WriteIdentifierNew(_tokenizer.GetIdentifier(), "subroutine", false, false, -1);
+				MustHaveMoreTokens();
 				Eat("(");
 				MustHaveMoreTokens();
 				CompileExpressionList();
@@ -297,7 +370,12 @@ namespace JackCompiler
 			// letStatement: 'let' varName ('[' expression ']')? '=' expression ';'
 			Eat("let");
 			MustHaveMoreTokens();
-			CompileName();
+
+			string name = _tokenizer.GetIdentifier();
+			SymbolTable.Kind kind = _symbolTable.KindOf(name);
+			int idx = _symbolTable.IndexOf(name);
+			WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
+			MustHaveMoreTokens();
 
 			while (IsSymbol('['))
 			{
@@ -480,22 +558,30 @@ namespace JackCompiler
 				{
 					throw new Exception("Unfinished structure");
 				}
-				string nextChar = _tokenizer.LookOneCharAhead();
-				if (nextChar == "[")
+				char nextChar = _tokenizer.LookOneCharAhead();
+				if (nextChar == '[')
 				{
-					CompileName();
+					// varName '[' expression ']'
+					string name = _tokenizer.GetIdentifier();
+					SymbolTable.Kind kind = _symbolTable.KindOf(name);
+					int idx = _symbolTable.IndexOf(name);
+					WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
+					MustHaveMoreTokens();
 					Eat("[");
 					MustHaveMoreTokens();
 					CompileExpression();
 					Eat("]");
 				}
-				else if (nextChar == "(" || nextChar == ".")
+				else if (nextChar == '(' || nextChar == '.')
 				{
 					CompileSubroutineCall();
 				}
 				else
 				{
-					WriteIdentifier();    // case varName
+					string name = _tokenizer.GetIdentifier();
+					SymbolTable.Kind kind = _symbolTable.KindOf(name);
+					int idx = _symbolTable.IndexOf(name);
+					WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
 				}
 			}
 			else if (tokenType == JackTokenizer.TokenType.SYMBOL)
@@ -557,12 +643,13 @@ namespace JackCompiler
 			_streamWriter.Close();
 		}
 
-		private void CompileName()
+		private string CompileNameAndReturn()
 		{
 			if (_tokenizer.GetTokenType() == JackTokenizer.TokenType.IDENTIFIER)
 			{
-				WriteIdentifier();
+				string name = _tokenizer.GetIdentifier();
 				MustHaveMoreTokens();
+				return name;
 			}
 			else
 			{
@@ -581,7 +668,7 @@ namespace JackCompiler
 				}
 				else if (tokenType == JackTokenizer.TokenType.IDENTIFIER)
 				{
-					WriteIdentifier();
+					WriteIdentifierNew(_tokenizer.GetIdentifier(), "class", false, false, -1);	// className
 				}
 				MustHaveMoreTokens();
 			}
@@ -597,15 +684,6 @@ namespace JackCompiler
 			JackTokenizer.KeyWord.INT,
 			JackTokenizer.KeyWord.CHAR
 		};
-
-		private void CompileVarTypeVarName()
-		{
-			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
-			bool isBoolOrIntOrChar = tokenType == JackTokenizer.TokenType.KEYWORD &&
-				_varTypes.Contains(_tokenizer.GetKeyWord());
-			CompileType(tokenType == JackTokenizer.TokenType.IDENTIFIER || isBoolOrIntOrChar);
-			CompileName();
-		}
 
 		private void Eat(string expectedToken)
 		{
@@ -634,9 +712,24 @@ namespace JackCompiler
 			}
 		}
 
-		private void WriteIdentifier()
+		/// <summary>
+		/// Output the identifier with extra info
+		/// </summary>
+		/// <param name="category">var, argument, static, field, class, subroutine</param>
+		/// <param name="isBeingDefined">whether the identifier is presently being defined or used</param>
+		/// <param name="isOneOf4Kinds">whether the identifier represents a variable of one of the four kinds (var, argument, static, field)</param>
+		/// <param name="runningIdx">running index assigned to the identifier by the symbol table</param>
+		private void WriteIdentifierNew(string name, string category, bool isBeingDefined, bool isOneOf4Kinds, int runningIdx)
 		{
-			WriteL("<identifier> " + _tokenizer.GetIdentifier() + " </identifier>");
+			WriteL("<identifier>");
+			_indentLevel++;
+			WriteL("<identifier> " + name + " </identifier>");
+			WriteL("<category> " + category + " </category>");
+			WriteL("<isBeingDefined> " + isBeingDefined + " </isBeingDefined>");
+			WriteL("<isOneOf4Kinds> " + isOneOf4Kinds + " </isOneOf4Kinds>");
+			WriteL("<runningIdx> " + runningIdx + " </runningIdx>");
+			_indentLevel--;
+			WriteL("</identifier>");
 		}
 
 		private static readonly Dictionary<string, string> _symbolsToXMLConvention = new()
@@ -678,6 +771,29 @@ namespace JackCompiler
 		private void WriteL(string text)
 		{
 			_streamWriter.WriteLine(new string(' ', _indentLevel * 2) + text);
+			// Console.WriteLine(new string(' ', _indentLevel * 2) + text);
+		}
+
+		private string CompileTypeAndReturn()
+		{
+			string type;
+			JackTokenizer.TokenType tokenType = _tokenizer.GetTokenType();
+			if (tokenType == JackTokenizer.TokenType.IDENTIFIER)
+			{
+				type = _tokenizer.GetIdentifier();
+				WriteIdentifierNew(type, "class", false, false, -1);  // className
+			}
+			else if (tokenType == JackTokenizer.TokenType.KEYWORD && _varTypes.Contains(_tokenizer.GetKeyWord()))
+			{
+				type = _tokenizer.GetKeyWord().ToString();
+				WriteKeyword();
+			}
+			else
+			{
+				throw new Exception("Unknown type!");
+			}
+			MustHaveMoreTokens();
+			return type;
 		}
 
 		private void MustHaveMoreTokens()
