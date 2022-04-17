@@ -14,40 +14,6 @@ namespace JackCompiler
 
 		private string _currentToken;
 
-		public enum TokenType
-		{
-			KEYWORD,
-			SYMBOL,
-			IDENTIFIER,
-			INT_CONST,
-			STRING_CONST
-		}
-
-		public enum KeyWord
-		{
-			CLASS,
-			METHOD,
-			FUNCTION,
-			CONSTRUCTOR,
-			INT,
-			BOOLEAN,
-			CHAR,
-			VOID,
-			VAR,
-			STATIC,
-			FIELD,
-			LET,
-			DO,
-			IF,
-			ELSE,
-			WHILE,
-			RETURN,
-			TRUE,
-			FALSE,
-			NULL,
-			THIS
-		}
-
 		private static readonly HashSet<string> _symbols = new()
 		{
 			"{",
@@ -280,13 +246,13 @@ namespace JackCompiler
 		/// `GetTokenType` is KEYWORD.
 		/// </summary>
 		/// <returns></returns>
-		public KeyWord GetKeyWord()
+		public Keyword GetKeyWord()
 		{
 			if (GetTokenType() != TokenType.KEYWORD)
 			{
 				throw new Exception("GetKeyWord should be called only if `GetTokenType` is KEYWORD!");
 			}
-			_ = Enum.TryParse(_currentToken.ToUpperInvariant(), out KeyWord keyWord);
+			_ = Enum.TryParse(_currentToken.ToUpperInvariant(), out Keyword keyWord);
 			return keyWord;
 		}
 

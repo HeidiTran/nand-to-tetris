@@ -1,0 +1,79 @@
+<class>
+  <keyword> class </keyword>
+  <identifier>
+    <identifier> Main </identifier>
+    <category> class </category>
+    <isBeingDefined> True </isBeingDefined>
+    <isOneOf4Kinds> False </isOneOf4Kinds>
+    <runningIdx> -1 </runningIdx>
+  </identifier>
+  <symbol> { </symbol>
+  <subroutineDec>
+    <keyword> function </keyword>
+    <keyword> void </keyword>
+    <identifier>
+      <identifier> main </identifier>
+      <category> subroutine </category>
+      <isBeingDefined> True </isBeingDefined>
+      <isOneOf4Kinds> False </isOneOf4Kinds>
+      <runningIdx> -1 </runningIdx>
+    </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <statements>
+        <doStatement>
+          <keyword> do </keyword>
+          <identifier>
+            <identifier> Output </identifier>
+            <category> class </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> . </symbol>
+          <identifier>
+            <identifier> printInt </identifier>
+            <category> subroutine </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+            <expression>
+              <term>
+                <integerConstant> 1 </integerConstant>
+              </term>
+              <symbol> + </symbol>
+              <term>
+                <symbol> ( </symbol>
+                <expression>
+                  <term>
+                    <integerConstant> 2 </integerConstant>
+                  </term>
+                  <symbol> * </symbol>
+                  <term>
+                    <integerConstant> 3 </integerConstant>
+                  </term>
+                </expression>
+                <symbol> ) </symbol>
+              </term>
+            </expression>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>
