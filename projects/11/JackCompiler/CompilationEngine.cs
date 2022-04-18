@@ -131,7 +131,8 @@ namespace JackCompiler
 			_indentLevel++;
 
 			// subroutineDec: ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
-			if (_tokenizer.GetKeyWord() == Keyword.METHOD)
+			Keyword keyword = _tokenizer.GetKeyWord();  // 'constructor' | 'function' | 'method'
+			if (keyword == Keyword.METHOD)
 			{
 				_symbolTable.Define("this", _currentClassName, SymbolTable.Kind.ARG);
 			}
@@ -152,7 +153,7 @@ namespace JackCompiler
 			CompileParameterList();
 			Eat(")");
 			MustHaveMoreTokens();
-			CompileSubroutineBody(subroutineName);
+			CompileSubroutineBody(subroutineName, keyword);
 
 			_indentLevel--;
 			WriteL("</subroutineDec>");
@@ -197,7 +198,8 @@ namespace JackCompiler
 		/// <summary>
 		/// Compiles a subroutine's body.
 		/// </summary>
-		public void CompileSubroutineBody(string subroutineName)
+		/// <param name="keyword">constructor | method | function</param>
+		public void CompileSubroutineBody(string subroutineName, Keyword keyword)
 		{
 			WriteL("<subroutineBody>");
 			_indentLevel++;
@@ -211,6 +213,19 @@ namespace JackCompiler
 			}
 
 			_vmWriter.WriteFunction($"{_currentClassName}.{subroutineName}", _symbolTable.VarCount(SymbolTable.Kind.VAR));
+
+			if (keyword == Keyword.CONSTRUCTOR)
+			{
+				_vmWriter.WritePush(Segment.CONSTANT,
+					_symbolTable.VarCount(SymbolTable.Kind.FIELD)); // size of obj of this class
+				_vmWriter.WriteCall("Memory.alloc", 1);
+				_vmWriter.WritePop(Segment.POINTER, 0); // anchor this at the base address
+			}
+			else if (keyword == Keyword.METHOD)
+			{
+				_vmWriter.WritePush(Segment.ARGUMENT, 0);
+				_vmWriter.WritePop(Segment.POINTER, 0); // Set base pointer to `this`
+			}
 
 			CompileStatements();
 			Eat("}");
@@ -333,8 +348,8 @@ namespace JackCompiler
 			// (className | varName) '.' subroutineName '(' expressionList ')'
 			char oneCharAhead = _tokenizer.LookOneCharAhead();
 			string name = _tokenizer.GetIdentifier();   // the first token
-			string vmFunctionName = string.Empty;
 			int nArgs = 0;
+			string vmFunctionName;
 			if (oneCharAhead == '(')
 			{
 				vmFunctionName = $"{_currentClassName}.{name}";
@@ -342,30 +357,40 @@ namespace JackCompiler
 				MustHaveMoreTokens();
 				Eat("(");
 				MustHaveMoreTokens();
-				nArgs = CompileExpressionListAndReturnNArgs();
+				nArgs += CompileExpressionListAndReturnNArgs();
+				_vmWriter.WritePush(Segment.POINTER, 0);    // method has this as an implied arg
+				nArgs++;    
 				Eat(")");
-			} else if (oneCharAhead == '.')
+			}
+			else if (oneCharAhead == '.')
 			{
+				string className;
 				if (_symbolTable.IsInSymbolTable(name))
 				{
 					SymbolTable.Kind kind = _symbolTable.KindOf(name);
 					int idx = _symbolTable.IndexOf(name);
 					WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
-				} else
+					className = _symbolTable.TypeOf(name);
+					_vmWriter.WritePush(_kindToSegment[kind], idx);
+					nArgs++;	// method has this as an implied arg
+				}
+				else
 				{
-					WriteIdentifierNew(name, "class", false, false, -1);	   // className
+					WriteIdentifierNew(name, "class", false, false, -1);       // className
+					className = name;
 				}
 				MustHaveMoreTokens();
 				Eat(".");
 				MustHaveMoreTokens();
-				vmFunctionName = $"{name}.{_tokenizer.GetIdentifier()}";
+				vmFunctionName = $"{className}.{_tokenizer.GetIdentifier()}";
 				WriteIdentifierNew(_tokenizer.GetIdentifier(), "subroutine", false, false, -1);
 				MustHaveMoreTokens();
 				Eat("(");
 				MustHaveMoreTokens();
-				nArgs = CompileExpressionListAndReturnNArgs();
+				nArgs += CompileExpressionListAndReturnNArgs();
 				Eat(")");
-			} else
+			}
+			else
 			{
 				throw new Exception("Unrecognized subroutine call structure!");
 			}
@@ -422,21 +447,22 @@ namespace JackCompiler
 			// whileStatement: '(' expression ')' '{' statements '}'
 			Eat("while");
 			MustHaveMoreTokens();
-			_vmWriter.WriteLabel($"WHILE_EXP{_whileCnt}");
+			int whileIdx = _whileCnt;
+			_whileCnt++;
+			_vmWriter.WriteLabel($"WHILE_EXP{whileIdx}");
 			Eat("(");
 			MustHaveMoreTokens();
 			CompileExpression();
 			Eat(")");
 			MustHaveMoreTokens();
 			_vmWriter.WriteArithmetic(Command.NOT);
-			_vmWriter.WriteIf($"WHILE_END{_whileCnt}");
+			_vmWriter.WriteIf($"WHILE_END{whileIdx}");
 			Eat("{");
 			MustHaveMoreTokens();
 			CompileStatements();
 			Eat("}");
-			_vmWriter.WriteGoto($"WHILE_EXP{_whileCnt}");
-			_vmWriter.WriteLabel($"WHILE_END{_whileCnt}");
-			_whileCnt++;
+			_vmWriter.WriteGoto($"WHILE_EXP{whileIdx}");
+			_vmWriter.WriteLabel($"WHILE_END{whileIdx}");
 			_indentLevel--;
 			WriteL("</whileStatement>");
 			MustHaveMoreTokens();
@@ -498,9 +524,14 @@ namespace JackCompiler
 			MustHaveMoreTokens();
 			_vmWriter.WriteLabel(ifTrue);
 			CompileStatements();
-			_vmWriter.WriteGoto(ifEnd);
+			
 			Eat("}");
 			MustHaveMoreTokens();
+
+			if (IsKeyword("else"))
+			{
+				_vmWriter.WriteGoto(ifEnd);
+			}
 
 			_vmWriter.WriteLabel(ifFalse);
 			if (IsKeyword("else"))
@@ -512,9 +543,9 @@ namespace JackCompiler
 				CompileStatements();
 				Eat("}");
 				MustHaveMoreTokens();
+				_vmWriter.WriteLabel(ifEnd);
 			}
 
-			_vmWriter.WriteLabel(ifEnd);
 			_indentLevel--;
 			WriteL("</ifStatement>");
 		}
@@ -624,7 +655,7 @@ namespace JackCompiler
 					_vmWriter.WriteArithmetic(Command.NOT);
 				} else
 				{
-					// TODO: When keyword = THIS
+					_vmWriter.WritePush(Segment.POINTER, 0);	// THIS is stored at pointer 0
 				}
 			}
 			else if (tokenType == TokenType.IDENTIFIER)
