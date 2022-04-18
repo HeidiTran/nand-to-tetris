@@ -11,8 +11,7 @@ namespace JackCompiler
 			// string inputPath = args[0];
 
 			// For debugging in VisualStudio
-			// string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ArrayTest";
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\Pong";
+			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\Square";
 
 			bool isDir = Directory.Exists(inputPath);
 			if (!isDir)
@@ -32,7 +31,7 @@ namespace JackCompiler
 		private static void CompileJackFile(string inputPath)
 		{
 			JackTokenizer tokenizer = new(inputPath);
-			CompilationEngine compilationEngine = new(tokenizer, inputPath.Replace(".jack", ".xml"));
+			CompilationEngine compilationEngine = new(tokenizer, inputPath.Replace(".jack", ".vm"));
 			compilationEngine.CompileClass();
 			tokenizer.Close();
 			compilationEngine.Close();

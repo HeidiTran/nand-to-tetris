@@ -15,15 +15,6 @@ namespace JackCompiler
 	/// </summary>
 	class SymbolTable
 	{
-		public enum Kind
-		{
-			STATIC,
-			FIELD,
-			ARG,
-			VAR,
-			NONE
-		}
-
 		private Dictionary<string, Tuple<string, Kind, int>> _classST;
 		private Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
 
