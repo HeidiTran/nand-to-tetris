@@ -9,7 +9,7 @@ namespace JackCompiler
 	enum Segment
 	{
 		CONSTANT,
-		ARG,
+		ARGUMENT,
 		LOCAL,
 		STATIC,
 		THIS,

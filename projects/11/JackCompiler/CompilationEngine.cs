@@ -15,7 +15,16 @@ namespace JackCompiler
 		private SymbolTable _symbolTable;
 		private int _indentLevel;
 		private string _currentClassName;
-		private int _subroutineCnt;
+		private int _ifCnt;
+		private int _whileCnt;
+
+		private static readonly Dictionary<SymbolTable.Kind, Segment> _kindToSegment = new()
+		{
+			{ SymbolTable.Kind.VAR, Segment.LOCAL },
+			{ SymbolTable.Kind.STATIC, Segment.STATIC },
+			{ SymbolTable.Kind.ARG, Segment.ARGUMENT },
+			{ SymbolTable.Kind.FIELD, Segment.THIS }	// TODO: Double check this
+		};
 
 		public CompilationEngine(JackTokenizer tokenizer, string xmlFilePath)
 		{
@@ -23,7 +32,6 @@ namespace JackCompiler
 			_streamWriter = new StreamWriter(xmlFilePath);
 			_vmWriter = new VMWriter(xmlFilePath.Replace(".xml", ".vm"));
 			_indentLevel = 0;
-			_subroutineCnt = 0;
 		}
 
 		private static readonly HashSet<Keyword> _subroutineKws = new()
@@ -117,6 +125,8 @@ namespace JackCompiler
 		public void CompileSubroutineDec()
 		{
 			_symbolTable.StartSubroutine();
+			_ifCnt = 0;
+			_whileCnt = 0;
 			WriteL("<subroutineDec>");
 			_indentLevel++;
 
@@ -146,7 +156,6 @@ namespace JackCompiler
 
 			_indentLevel--;
 			WriteL("</subroutineDec>");
-			_subroutineCnt++;
 			MustHaveMoreTokens();
 		}
 
@@ -312,9 +321,7 @@ namespace JackCompiler
 			Eat(";");
 
 			// Since it's a do statement, we discard the return value
-			// We still have to fulfill the call-and-return contract, so we push constant 0
 			_vmWriter.WritePop(Segment.TEMP, 0);
-			_vmWriter.WritePush(Segment.CONSTANT, 0);
 			_indentLevel--;
 			WriteL("</doStatement>");
 			MustHaveMoreTokens();
@@ -398,6 +405,7 @@ namespace JackCompiler
 			CompileExpression();
 			Eat(";");
 
+			_vmWriter.WritePop(_kindToSegment[kind], idx);
 			_indentLevel--;
 			WriteL("</letStatement>");
 			MustHaveMoreTokens();
@@ -414,15 +422,21 @@ namespace JackCompiler
 			// whileStatement: '(' expression ')' '{' statements '}'
 			Eat("while");
 			MustHaveMoreTokens();
+			_vmWriter.WriteLabel($"WHILE_EXP{_whileCnt}");
 			Eat("(");
 			MustHaveMoreTokens();
 			CompileExpression();
 			Eat(")");
 			MustHaveMoreTokens();
+			_vmWriter.WriteArithmetic(Command.NOT);
+			_vmWriter.WriteIf($"WHILE_END{_whileCnt}");
 			Eat("{");
 			MustHaveMoreTokens();
 			CompileStatements();
 			Eat("}");
+			_vmWriter.WriteGoto($"WHILE_EXP{_whileCnt}");
+			_vmWriter.WriteLabel($"WHILE_END{_whileCnt}");
+			_whileCnt++;
 			_indentLevel--;
 			WriteL("</whileStatement>");
 			MustHaveMoreTokens();
@@ -441,6 +455,8 @@ namespace JackCompiler
 			MustHaveMoreTokens();
 			if (IsSymbol(';'))
 			{
+				// We still have to fulfill the call-and-return contract, so we push constant 0
+				_vmWriter.WritePush(Segment.CONSTANT, 0);
 				_vmWriter.WriteReturn();
 				WriteSymbol();
 			}
@@ -448,6 +464,7 @@ namespace JackCompiler
 			{
 				CompileExpression();
 				Eat(";");
+				_vmWriter.WriteReturn();
 			}
 			_indentLevel--;
 			WriteL("</returnStatement>");
@@ -464,19 +481,28 @@ namespace JackCompiler
 
 			// 'if' '(' expression ')' '{' statements '}'
 			// ('else' '{' statements '}') ?
+			string ifTrue = $"IF_TRUE{_ifCnt}";
+			string ifFalse = $"IF_FALSE{_ifCnt}";
+			string ifEnd = $"IF_END{_ifCnt}";
+			_ifCnt++;
 			Eat("if");
 			MustHaveMoreTokens();
 			Eat("(");
 			MustHaveMoreTokens();
 			CompileExpression();
 			Eat(")");
+			_vmWriter.WriteIf(ifTrue);
+			_vmWriter.WriteGoto(ifFalse);
 			MustHaveMoreTokens();
 			Eat("{");
 			MustHaveMoreTokens();
+			_vmWriter.WriteLabel(ifTrue);
 			CompileStatements();
+			_vmWriter.WriteGoto(ifEnd);
 			Eat("}");
 			MustHaveMoreTokens();
 
+			_vmWriter.WriteLabel(ifFalse);
 			if (IsKeyword("else"))
 			{
 				Eat("else");
@@ -488,6 +514,7 @@ namespace JackCompiler
 				MustHaveMoreTokens();
 			}
 
+			_vmWriter.WriteLabel(ifEnd);
 			_indentLevel--;
 			WriteL("</ifStatement>");
 		}
@@ -586,6 +613,19 @@ namespace JackCompiler
 			else if (IsKeywordConst())
 			{
 				WriteKeyword();
+				Keyword keyword = _tokenizer.GetKeyWord();
+				if (keyword == Keyword.FALSE ||
+					keyword == Keyword.NULL)
+				{
+					_vmWriter.WritePush(Segment.CONSTANT, 0);
+				} else if (keyword == Keyword.TRUE)
+				{
+					_vmWriter.WritePush(Segment.CONSTANT, 0);
+					_vmWriter.WriteArithmetic(Command.NOT);
+				} else
+				{
+					// TODO: When keyword = THIS
+				}
 			}
 			else if (tokenType == TokenType.IDENTIFIER)
 			{
@@ -613,10 +653,12 @@ namespace JackCompiler
 				}
 				else
 				{
+					// Case: varName
 					string name = _tokenizer.GetIdentifier();
 					SymbolTable.Kind kind = _symbolTable.KindOf(name);
 					int idx = _symbolTable.IndexOf(name);
 					WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
+					_vmWriter.WritePush(_kindToSegment[kind], idx);
 				}
 			}
 			else if (tokenType == TokenType.SYMBOL)
@@ -634,6 +676,13 @@ namespace JackCompiler
 					WriteSymbol();
 					MustHaveMoreTokens();
 					CompileTerm();
+					if (symbol == '-')
+					{
+						_vmWriter.WriteArithmetic(Command.NEG);
+					} else
+					{
+						_vmWriter.WriteArithmetic(Command.NOT);
+					}
 				}
 				else
 				{

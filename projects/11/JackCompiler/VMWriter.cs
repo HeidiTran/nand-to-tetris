@@ -111,7 +111,7 @@ namespace JackCompiler
 		private void WriteL(string text)
 		{
 			_streamWriter.WriteLine(text);
-			//Console.WriteLine(text);
+			// Console.WriteLine(text);
 		}
 	}
 }

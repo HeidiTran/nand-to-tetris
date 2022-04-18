@@ -12,7 +12,7 @@ namespace JackCompiler
 
 			// For debugging in VisualStudio
 			// string inputPath = @"C:\Projects\nand-to-tetris\projects\10\ArrayTest";
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\Seven";
+			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\ConvertToBin";
 
 			bool isDir = Directory.Exists(inputPath);
 			if (!isDir)
