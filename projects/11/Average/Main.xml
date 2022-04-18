@@ -1,0 +1,418 @@
+<class>
+  <keyword> class </keyword>
+  <identifier>
+    <identifier> Main </identifier>
+    <category> class </category>
+    <isBeingDefined> True </isBeingDefined>
+    <isOneOf4Kinds> False </isOneOf4Kinds>
+    <runningIdx> -1 </runningIdx>
+  </identifier>
+  <symbol> { </symbol>
+  <subroutineDec>
+    <keyword> function </keyword>
+    <keyword> void </keyword>
+    <identifier>
+      <identifier> main </identifier>
+      <category> subroutine </category>
+      <isBeingDefined> True </isBeingDefined>
+      <isOneOf4Kinds> False </isOneOf4Kinds>
+      <runningIdx> -1 </runningIdx>
+    </identifier>
+    <symbol> ( </symbol>
+    <parameterList>
+    </parameterList>
+    <symbol> ) </symbol>
+    <subroutineBody>
+      <symbol> { </symbol>
+      <varDec>
+        <keyword> var </keyword>
+        <identifier>
+          <identifier> Array </identifier>
+          <category> class </category>
+          <isBeingDefined> False </isBeingDefined>
+          <isOneOf4Kinds> False </isOneOf4Kinds>
+          <runningIdx> -1 </runningIdx>
+        </identifier>
+        <identifier>
+          <identifier> a </identifier>
+          <category> var </category>
+          <isBeingDefined> True </isBeingDefined>
+          <isOneOf4Kinds> True </isOneOf4Kinds>
+          <runningIdx> 0 </runningIdx>
+        </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <varDec>
+        <keyword> var </keyword>
+        <keyword> int </keyword>
+        <identifier>
+          <identifier> length </identifier>
+          <category> var </category>
+          <isBeingDefined> True </isBeingDefined>
+          <isOneOf4Kinds> True </isOneOf4Kinds>
+          <runningIdx> 1 </runningIdx>
+        </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <varDec>
+        <keyword> var </keyword>
+        <keyword> int </keyword>
+        <identifier>
+          <identifier> i </identifier>
+          <category> var </category>
+          <isBeingDefined> True </isBeingDefined>
+          <isOneOf4Kinds> True </isOneOf4Kinds>
+          <runningIdx> 2 </runningIdx>
+        </identifier>
+        <symbol> , </symbol>
+        <identifier>
+          <identifier> sum </identifier>
+          <category> var </category>
+          <isBeingDefined> True </isBeingDefined>
+          <isOneOf4Kinds> True </isOneOf4Kinds>
+          <runningIdx> 3 </runningIdx>
+        </identifier>
+        <symbol> ; </symbol>
+      </varDec>
+      <statements>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier>
+            <identifier> length </identifier>
+            <category> var </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> True </isOneOf4Kinds>
+            <runningIdx> 1 </runningIdx>
+          </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <identifier>
+                <identifier> Keyboard </identifier>
+                <category> class </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> False </isOneOf4Kinds>
+                <runningIdx> -1 </runningIdx>
+              </identifier>
+              <symbol> . </symbol>
+              <identifier>
+                <identifier> readInt </identifier>
+                <category> subroutine </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> False </isOneOf4Kinds>
+                <runningIdx> -1 </runningIdx>
+              </identifier>
+              <symbol> ( </symbol>
+              <expressionList>
+                <expression>
+                  <term>
+                    <stringConstant> How many numbers?  </stringConstant>
+                  </term>
+                </expression>
+              </expressionList>
+              <symbol> ) </symbol>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier>
+            <identifier> a </identifier>
+            <category> var </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> True </isOneOf4Kinds>
+            <runningIdx> 0 </runningIdx>
+          </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <identifier>
+                <identifier> Array </identifier>
+                <category> class </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> False </isOneOf4Kinds>
+                <runningIdx> -1 </runningIdx>
+              </identifier>
+              <symbol> . </symbol>
+              <identifier>
+                <identifier> new </identifier>
+                <category> subroutine </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> False </isOneOf4Kinds>
+                <runningIdx> -1 </runningIdx>
+              </identifier>
+              <symbol> ( </symbol>
+              <expressionList>
+                <expression>
+                  <term>
+                    <identifier>
+                      <identifier> length </identifier>
+                      <category> var </category>
+                      <isBeingDefined> False </isBeingDefined>
+                      <isOneOf4Kinds> True </isOneOf4Kinds>
+                      <runningIdx> 1 </runningIdx>
+                    </identifier>
+                  </term>
+                </expression>
+              </expressionList>
+              <symbol> ) </symbol>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <letStatement>
+          <keyword> let </keyword>
+          <identifier>
+            <identifier> i </identifier>
+            <category> var </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> True </isOneOf4Kinds>
+            <runningIdx> 2 </runningIdx>
+          </identifier>
+          <symbol> = </symbol>
+          <expression>
+            <term>
+              <integerConstant> 0 </integerConstant>
+            </term>
+          </expression>
+          <symbol> ; </symbol>
+        </letStatement>
+        <whileStatement>
+          <keyword> while </keyword>
+          <symbol> ( </symbol>
+          <expression>
+            <term>
+              <identifier>
+                <identifier> i </identifier>
+                <category> var </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> True </isOneOf4Kinds>
+                <runningIdx> 2 </runningIdx>
+              </identifier>
+            </term>
+            <symbol> &lt; </symbol>
+            <term>
+              <identifier>
+                <identifier> length </identifier>
+                <category> var </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> True </isOneOf4Kinds>
+                <runningIdx> 1 </runningIdx>
+              </identifier>
+            </term>
+          </expression>
+          <symbol> ) </symbol>
+          <symbol> { </symbol>
+          <statements>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <identifier> a </identifier>
+                <category> var </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> True </isOneOf4Kinds>
+                <runningIdx> 0 </runningIdx>
+              </identifier>
+              <symbol> [ </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <identifier> i </identifier>
+                    <category> var </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> True </isOneOf4Kinds>
+                    <runningIdx> 2 </runningIdx>
+                  </identifier>
+                </term>
+              </expression>
+              <symbol> ] </symbol>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <identifier> Keyboard </identifier>
+                    <category> class </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> False </isOneOf4Kinds>
+                    <runningIdx> -1 </runningIdx>
+                  </identifier>
+                  <symbol> . </symbol>
+                  <identifier>
+                    <identifier> readInt </identifier>
+                    <category> subroutine </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> False </isOneOf4Kinds>
+                    <runningIdx> -1 </runningIdx>
+                  </identifier>
+                  <symbol> ( </symbol>
+                  <expressionList>
+                    <expression>
+                      <term>
+                        <stringConstant> Enter a number:  </stringConstant>
+                      </term>
+                    </expression>
+                  </expressionList>
+                  <symbol> ) </symbol>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <identifier> sum </identifier>
+                <category> var </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> True </isOneOf4Kinds>
+                <runningIdx> 3 </runningIdx>
+              </identifier>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <identifier> sum </identifier>
+                    <category> var </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> True </isOneOf4Kinds>
+                    <runningIdx> 3 </runningIdx>
+                  </identifier>
+                </term>
+                <symbol> + </symbol>
+                <term>
+                  <identifier>
+                    <identifier> a </identifier>
+                    <category> var </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> True </isOneOf4Kinds>
+                    <runningIdx> 0 </runningIdx>
+                  </identifier>
+                  <symbol> [ </symbol>
+                  <expression>
+                    <term>
+                      <identifier>
+                        <identifier> i </identifier>
+                        <category> var </category>
+                        <isBeingDefined> False </isBeingDefined>
+                        <isOneOf4Kinds> True </isOneOf4Kinds>
+                        <runningIdx> 2 </runningIdx>
+                      </identifier>
+                    </term>
+                  </expression>
+                  <symbol> ] </symbol>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+            <letStatement>
+              <keyword> let </keyword>
+              <identifier>
+                <identifier> i </identifier>
+                <category> var </category>
+                <isBeingDefined> False </isBeingDefined>
+                <isOneOf4Kinds> True </isOneOf4Kinds>
+                <runningIdx> 2 </runningIdx>
+              </identifier>
+              <symbol> = </symbol>
+              <expression>
+                <term>
+                  <identifier>
+                    <identifier> i </identifier>
+                    <category> var </category>
+                    <isBeingDefined> False </isBeingDefined>
+                    <isOneOf4Kinds> True </isOneOf4Kinds>
+                    <runningIdx> 2 </runningIdx>
+                  </identifier>
+                </term>
+                <symbol> + </symbol>
+                <term>
+                  <integerConstant> 1 </integerConstant>
+                </term>
+              </expression>
+              <symbol> ; </symbol>
+            </letStatement>
+          </statements>
+          <symbol> } </symbol>
+        </whileStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <identifier>
+            <identifier> Output </identifier>
+            <category> class </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> . </symbol>
+          <identifier>
+            <identifier> printString </identifier>
+            <category> subroutine </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+            <expression>
+              <term>
+                <stringConstant> The average is  </stringConstant>
+              </term>
+            </expression>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <doStatement>
+          <keyword> do </keyword>
+          <identifier>
+            <identifier> Output </identifier>
+            <category> class </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> . </symbol>
+          <identifier>
+            <identifier> printInt </identifier>
+            <category> subroutine </category>
+            <isBeingDefined> False </isBeingDefined>
+            <isOneOf4Kinds> False </isOneOf4Kinds>
+            <runningIdx> -1 </runningIdx>
+          </identifier>
+          <symbol> ( </symbol>
+          <expressionList>
+            <expression>
+              <term>
+                <identifier>
+                  <identifier> sum </identifier>
+                  <category> var </category>
+                  <isBeingDefined> False </isBeingDefined>
+                  <isOneOf4Kinds> True </isOneOf4Kinds>
+                  <runningIdx> 3 </runningIdx>
+                </identifier>
+              </term>
+              <symbol> / </symbol>
+              <term>
+                <identifier>
+                  <identifier> length </identifier>
+                  <category> var </category>
+                  <isBeingDefined> False </isBeingDefined>
+                  <isOneOf4Kinds> True </isOneOf4Kinds>
+                  <runningIdx> 1 </runningIdx>
+                </identifier>
+              </term>
+            </expression>
+          </expressionList>
+          <symbol> ) </symbol>
+          <symbol> ; </symbol>
+        </doStatement>
+        <returnStatement>
+          <keyword> return </keyword>
+          <symbol> ; </symbol>
+        </returnStatement>
+      </statements>
+      <symbol> } </symbol>
+    </subroutineBody>
+  </subroutineDec>
+  <symbol> } </symbol>
+</class>

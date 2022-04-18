@@ -416,13 +416,17 @@ namespace JackCompiler
 			WriteIdentifierNew(name, kind.ToString().ToLower(), false, true, idx);
 			MustHaveMoreTokens();
 
+			bool isArrayAccess = false;
 			while (IsSymbol('['))
 			{
+				isArrayAccess = true;
 				Eat("[");
 				MustHaveMoreTokens();
 				CompileExpression();
 				Eat("]");
 				MustHaveMoreTokens();
+				_vmWriter.WritePush(_kindToSegment[kind], idx);
+				_vmWriter.WriteArithmetic(Command.ADD);
 			}
 
 			Eat("=");
@@ -430,7 +434,16 @@ namespace JackCompiler
 			CompileExpression();
 			Eat(";");
 
-			_vmWriter.WritePop(_kindToSegment[kind], idx);
+			if (isArrayAccess)
+			{
+				_vmWriter.WritePop(Segment.TEMP, 0);
+				_vmWriter.WritePop(Segment.POINTER, 1);
+				_vmWriter.WritePush(Segment.TEMP, 0);
+				_vmWriter.WritePop(Segment.THAT, 0);
+			} else
+			{
+				_vmWriter.WritePop(_kindToSegment[kind], idx);
+			}
 			_indentLevel--;
 			WriteL("</letStatement>");
 			MustHaveMoreTokens();
@@ -639,7 +652,15 @@ namespace JackCompiler
 			}
 			else if (tokenType == TokenType.STRING_CONST)
 			{
-				WriteL("<stringConstant> " + _tokenizer.GetStringVal() + " </stringConstant>");
+				string s = _tokenizer.GetStringVal();
+				_vmWriter.WritePush(Segment.CONSTANT, s.Length);
+				_vmWriter.WriteCall("String.new", 1);
+				foreach (char c in s)
+				{
+					_vmWriter.WritePush(Segment.CONSTANT, c);
+					_vmWriter.WriteCall("String.appendChar", 2);
+				}
+				WriteL("<stringConstant> " + s + " </stringConstant>");
 			}
 			else if (IsKeywordConst())
 			{
@@ -677,6 +698,10 @@ namespace JackCompiler
 					MustHaveMoreTokens();
 					CompileExpression();
 					Eat("]");
+					_vmWriter.WritePush(_kindToSegment[kind], idx);
+					_vmWriter.WriteArithmetic(Command.ADD);
+					_vmWriter.WritePop(Segment.POINTER, 1);
+					_vmWriter.WritePush(Segment.THAT, 0);
 				}
 				else if (nextChar == '(' || nextChar == '.')
 				{
