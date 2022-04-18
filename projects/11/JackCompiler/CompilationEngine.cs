@@ -357,8 +357,8 @@ namespace JackCompiler
 				MustHaveMoreTokens();
 				Eat("(");
 				MustHaveMoreTokens();
-				nArgs += CompileExpressionListAndReturnNArgs();
 				_vmWriter.WritePush(Segment.POINTER, 0);    // method has this as an implied arg
+				nArgs += CompileExpressionListAndReturnNArgs();
 				nArgs++;    
 				Eat(")");
 			}
