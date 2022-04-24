@@ -8,40 +8,157 @@
  * Note: Jack compilers implement multiplication and division using OS method calls.
  */
 class Math {
+   static Array twoToThe;
 
-    /** Initializes the library. */
-    function void init() {
-    }
+   /** Initializes the library. */
+   function void init() {
+      let twoToThe = Array.new(16);
+      let twoToThe[0] = 1;
+      let twoToThe[1] = 2;
+      let twoToThe[2] = 4;
+      let twoToThe[3] = 8;
+      let twoToThe[4] = 16;
+      let twoToThe[5] = 32;
+      let twoToThe[6] = 64;
+      let twoToThe[7] = 128;
+      let twoToThe[8] = 256;
+      let twoToThe[9] = 512;
+      let twoToThe[10] = 1024;
+      let twoToThe[11] = 2048;
+      let twoToThe[12] = 4096;
+      let twoToThe[13] = 8192;
+      let twoToThe[14] = 16384;
+      let twoToThe[15] = 32767 + 1;
+      return;
+   }
 
-    /** Returns the absolute value of x. */
-    function int abs(int x) {
-    }
+   /** Returns the absolute value of x. */
+   function int abs(int x) {
+      if (x < 0) {
+         return -x;
+      } 
+      return x;
+   }
 
-    /** Returns the product of x and y. 
-     *  When a Jack compiler detects the multiplication operator '*' in the 
-     *  program's code, it handles it by invoking this method. In other words,
-     *  the Jack expressions x*y and multiply(x,y) return the same value.
-     */
-    function int multiply(int x, int y) {
-    }
+   /** Returns the product of x and y. 
+    *  When a Jack compiler detects the multiplication operator '*' in the 
+    *  program's code, it handles it by invoking this method. In other words,
+    *  the Jack expressions x*y and multiply(x,y) return the same value.
+    */
+   function int multiply(int x, int y) {
+      var int res, shiftedX, i;
+      let res = 0;
+      let shiftedX = x;
 
-    /** Returns the integer part of x/y.
-     *  When a Jack compiler detects the multiplication operator '/' in the 
-     *  program's code, it handles it by invoking this method. In other words,
-     *  the Jack expressions x/y and divide(x,y) return the same value.
-     */
-    function int divide(int x, int y) {
-    }
+      let i = 0;
+      while (i < 16) {
+         if (Math.bit(y, i)) {
+            let res = res + shiftedX;
+         }
+         let shiftedX = shiftedX + shiftedX;
+         let i = i + 1;
+      } 
+      return res;
+   }
 
-    /** Returns the integer part of the square root of x. */
-    function int sqrt(int x) {
-    }
+   function boolean productIsNegative(int x, int y) {
+      if (((x < 0) & (y > 0)) | ((x > 0) & (y < 0))) {
+         return true;
+      }
+      return false;
+   }
 
-    /** Returns the greater number. */
-    function int max(int a, int b) {
-    }
+   /** Returns the integer part of x/y.
+    *  When a Jack compiler detects the multiplication operator '/' in the 
+    *  program's code, it handles it by invoking this method. In other words,
+    *  the Jack expressions x/y and divide(x,y) return the same value.
+    */
+   function int divide(int x, int y) {
+      var int absX, absY, q;
+      let absX = Math.abs(x);
+      let absY = Math.abs(y);
 
-    /** Returns the smaller number. */
-    function int min(int a, int b) {
-    }
+      if (absY > absX) {
+         return 0;
+      }
+
+      let q = Math.divide(absX, absY * 2);
+      if ((absX - (q * absY * 2)) < absY) {
+         if (Math.productIsNegative(x, y)) {
+            return -(2 * q);
+         }
+         return 2 * q;
+      }
+
+      if (Math.productIsNegative(x, y)) {
+         return -(2 * q + 1);
+      }
+      return 2 * q + 1;
+   }
+
+   function int mod(int x, int k) {
+      var int quotient;
+      let quotient = x/k;
+      return x - (quotient*k);
+   }
+
+   /** Returns x^k. */
+   function int power(int x, int k) {
+      if (k = 0) { return 1; }
+
+      if (k = 1) { return x; }
+
+      if (Math.mod(k, 2) = 0) {
+         return Math.power(x*x, k/2);
+      }
+      return x * Math.power(x*x, k/2);
+   }
+
+   /** Returns the integer part of the square root of x. */
+   function int sqrt(int x) {
+      // Find an integer y such that y^2 <= x < (y + 1)^2
+      // for 0 <= x < 2*16
+      // By performing a binary search in the range 0...2^(16/2) - 1
+      var int y, j, twoToTheJ, y_plus_twoToTheJ_squared;
+      let y = 0;
+      let j = 8 - 1;
+      while (j > -1) {
+         let twoToTheJ = Math.power(2, j);
+         let y_plus_twoToTheJ_squared = Math.power(y + twoToTheJ, 2);
+         if (((y_plus_twoToTheJ_squared < x) | 
+            (y_plus_twoToTheJ_squared = x)) & (y_plus_twoToTheJ_squared > 0)) {
+               let y = y + twoToTheJ;
+         }
+         let j = j - 1;
+      }
+      return y;
+   }
+
+   /** Returns the greater number. */
+   function int max(int a, int b) {
+      if (a > b) {
+         return a;
+      } 
+      return b;
+   }
+
+   /** Returns the smaller number. */
+   function int min(int a, int b) {
+      if (a < b) {
+         return a;
+      }
+      return b;
+   }
+
+   /** Returns true if the j-th bit of the integer x is 1
+   and false otherwise. */
+   function boolean bit(int x, int j) {
+      var int mask;
+      let mask = twoToThe[j];
+
+      if (~((x & mask) = 0)) {
+         return true;
+      }
+      return false;
+   }
 }
