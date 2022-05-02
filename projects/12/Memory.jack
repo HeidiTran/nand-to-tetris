@@ -9,26 +9,85 @@
  * consists of 32,768 words, each holding a 16-bit binary number.
  */ 
 class Memory {
+    static Array ram;
+    static Array heap;
+    static Array freeList;
+    static int overheadSize;
 
     /** Initializes the class. */
     function void init() {
+        // accessing ram[i] results in accessing the word
+        // whose address is 0 + i in the RAM
+        let ram = 0;  
+        let heap = 2048;    // Base address for heap
+        let freeList = 2048;
+        let overheadSize = 2;
+        let freeList[0] = 14335 - overheadSize; // initial length of the block    
+        let freeList[1] = 0;    // address of the next block = 0 since there's no current next block    
+        return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        return ram[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
+        var int prevSegmentAddr, segmentAddr, blockSizeAddr;
+        var boolean foundSegment;
+        let foundSegment = false;
+        let prevSegmentAddr = freeList;
+        let segmentAddr = freeList;
+
+        // Traverse to find base address for segmentAddr where segmentAddr[0] >= size
+        while (~foundSegment & ~(segmentAddr[1] = 0)) {
+            if ((segmentAddr[0] > size) | (segmentAddr[0] = size)) {
+                let foundSegment = true;
+            } else {
+                let prevSegmentAddr = segmentAddr;
+                let segmentAddr = segmentAddr[1];
+            }
+        }
+
+        // If this is the last segment + size satisfies
+        if ((segmentAddr[1] = 0) & 
+            ((segmentAddr[0] > size) | (segmentAddr[0] = size))) {
+            let foundSegment = true;
+        }
+
+        if (~foundSegment) {
+            // TODO: Scream/or call defragmentation
+        }
+        
+        let blockSizeAddr = segmentAddr + (segmentAddr[0] - size);
+        if (~(blockSizeAddr = segmentAddr)) {
+            let segmentAddr[0] = segmentAddr[0] - size - overheadSize;
+        } else {
+            let prevSegmentAddr[1] = segmentAddr[1];
+        }
+        let blockSizeAddr[0] = size;
+        let blockSizeAddr[1] = 0;
+        return blockSizeAddr + 2;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
-    function void deAlloc(Array o) {
-    }    
+    function void deAlloc(Array blockHeader) {
+        var int segmentAddr;
+        let segmentAddr = freeList;
+        while (~(segmentAddr[1] = 0)) {
+            let segmentAddr = segmentAddr[1];
+        }
+
+        let segmentAddr[1] = blockHeader - 2;
+        return;
+    }      
 }
