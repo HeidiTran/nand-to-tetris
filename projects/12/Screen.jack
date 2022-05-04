@@ -23,8 +23,12 @@ class Screen {
 
     /** Erases the entire screen. */
     function void clearScreen() {
-        let color = false;
-        do Screen.drawRectangle(0, 0, 511, 255);
+        var int i;
+        let i = 0;
+        while (i < 8192) {
+            let screen[i] = false;
+            let i = i + 1;
+        }
         return;
     }
 
@@ -44,7 +48,6 @@ class Screen {
    /** Returns x^k. */
    function int power(int x, int k) {
         if (k = 0) { return 1; }
-
         if (k = 1) { return x; }
 
         if (Screen.mod(k, 2) = 0) {
@@ -55,17 +58,14 @@ class Screen {
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
-        var int address, value, mask;
+        var int address, mask;
         let address = (32*y) + (x/16);
-
-        let value = screen[address];
         let mask = Screen.power(2, Screen.mod(x, 16));
         if (color) {
-            let value = value | mask;   // Draw black
+            let screen[address] = screen[address] | mask;   // Draw black
         } else {
-            let value = value & (~mask);
+            let screen[address] = screen[address] & (~mask);
         }
-        let screen[address] = value;
         return;
     }
 
@@ -77,8 +77,7 @@ class Screen {
         let b = 0;
         let adyMinusbdx = 0;
 
-        while (((a < dx) | (a = dx)) &
-                ((b < dy) | (b = dy))) {
+        while (~(a > dx) & ~(b > dy)) {
             do Screen.drawPixel(x1 + a, y1 + b);
 
             // Decide to go right/go down
@@ -100,8 +99,7 @@ class Screen {
         let b = 0;
         let adyMinusbdx = 0;
 
-        while (((a > dx) | (a = dx)) &
-                ((b < dy) | (b = dy))) {
+        while (~(a < dx) & (~(b > dy))) {
             do Screen.drawPixel(x1 + a, y1 + b);
             
             // Decide to go left/go down
@@ -117,28 +115,29 @@ class Screen {
     }
 
     function void drawVerticalLine(int x, int y, int dy) {
-        var int address, value, mask, xDivide16, i;
+        var int address, mask, xDivide16, curY, i;
         let mask = Screen.power(2, Screen.mod(x, 16));
+
+        let curY = 32*y;
         let xDivide16 = x/16;
 
         let i = 0;
         while (i < dy) {
-            let address = (32*(y + i)) + xDivide16;
-            let value = screen[address];
+            let address = curY + xDivide16;
             if (color) {
-                let value = value | mask;   // Draw black
+                let screen[address] = screen[address] | mask;   // Draw black
             } else {
-                let value = value & (~mask);
+                let screen[address] = screen[address] & (~mask);
             }
-            let screen[address] = value;
+            let curY = curY + 32;   // Go to the next row
             let i = i + 1;
         }
         return;
     }
 
     function void drawHorizontalLine(int x, int y, int dx) {
-        var int i, curX, r, c;
-        let r = y;
+        var int curX, rTimes32, c, i;
+        let rTimes32 = y * 32;
 
         let i = 0;
         while (i < dx) {
@@ -147,9 +146,12 @@ class Screen {
                 do Screen.drawPixel(curX, y);
                 let i = i + 1;
             } else {
-                let c = curX/16;
-                let screen[r*32 + c] = color;
-                let i = i + 16;
+                while (~(dx - i < 16)) {
+                    let c = curX/16;
+                    let screen[rTimes32 + c] = color;
+                    let i = i + 16;
+                    let curX = x + i;
+                }
             }
         }
         return;
@@ -164,18 +166,22 @@ class Screen {
 
         if ((dx > 0) & (dy > 0)) {
             do Screen.drawLinePosDxPosDy(x1, y1, dx, dy);
+            return;
         }
 
         if ((dx < 0) & (dy < 0)) {
             do Screen.drawLinePosDxPosDy(x2, y2, -dx, -dy);
+            return;
         }
 
         if ((dx < 0) & (dy > 0)) {
             do Screen.drawLineNegDxPosDy(x1, y1, dx, dy);
+            return;
         }
 
         if ((dx > 0) & (dy < 0)) {
             do Screen.drawLineNegDxPosDy(x2, y2, -dx, -dy);
+            return;
         }
 
         if (dx = 0) {
@@ -184,6 +190,7 @@ class Screen {
             } else {
                 do Screen.drawVerticalLine(x2, y2, -dy);
             }
+            return;
         }
 
         if (dy = 0) {
@@ -192,6 +199,7 @@ class Screen {
             } else {
                 do Screen.drawHorizontalLine(x2, y2, -dx);
             }
+            return;
         }
         return;
     }
