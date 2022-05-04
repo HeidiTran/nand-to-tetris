@@ -11,10 +11,13 @@
  */
 class Screen {
     static boolean color;
+    static Array screen;
 
     /** Initializes the Screen. */
     function void init() {
         let color = true;
+        // The screen's contents starts at RAM 16384
+        let screen = 16384; 
         return;
     }
 
@@ -55,15 +58,14 @@ class Screen {
         var int address, value, mask;
         let address = (32*y) + (x/16);
 
-        // The screen's contents starts at RAM 16384
-        let value = Memory.peek(16384 + address);
+        let value = screen[address];
         let mask = Screen.power(2, Screen.mod(x, 16));
         if (color) {
             let value = value | mask;   // Draw black
         } else {
             let value = value & (~mask);
         }
-        do Memory.poke(16384 + address, value);
+        let screen[address] = value;
         return;
     }
 
@@ -115,21 +117,40 @@ class Screen {
     }
 
     function void drawVerticalLine(int x, int y, int dy) {
-        var int i;
+        var int address, value, mask, xDivide16, i;
+        let mask = Screen.power(2, Screen.mod(x, 16));
+        let xDivide16 = x/16;
+
         let i = 0;
         while (i < dy) {
-            do Screen.drawPixel(x, y + i);
+            let address = (32*(y + i)) + xDivide16;
+            let value = screen[address];
+            if (color) {
+                let value = value | mask;   // Draw black
+            } else {
+                let value = value & (~mask);
+            }
+            let screen[address] = value;
             let i = i + 1;
         }
         return;
     }
 
     function void drawHorizontalLine(int x, int y, int dx) {
-        var int i;
+        var int i, curX, r, c;
+        let r = y;
+
         let i = 0;
         while (i < dx) {
-            do Screen.drawPixel(x + i, y);
-            let i = i + 1;
+            let curX = x + i;
+            if ((dx - i < 16) | ~(Screen.mod(curX, 16) = 0)) {
+                do Screen.drawPixel(curX, y);
+                let i = i + 1;
+            } else {
+                let c = curX/16;
+                let screen[r*32 + c] = color;
+                let i = i + 16;
+            }
         }
         return;
     }
