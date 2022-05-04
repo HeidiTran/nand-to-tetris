@@ -22,7 +22,7 @@ class Memory {
         let heap = 2048;    // Base address for heap
         let freeList = 2048;
         let overheadSize = 2;
-        let freeList[0] = 14335 - overheadSize; // initial length of the block    
+        let freeList[0] = 14336 - overheadSize; // initial length of the block    
         let freeList[1] = 0;    // address of the next block = 0 since there's no current next block    
         return;
     }
@@ -43,13 +43,19 @@ class Memory {
     function int alloc(int size) {
         var int prevSegmentAddr, segmentAddr, blockSizeAddr;
         var boolean foundSegment;
+
+        // Allocated memory size must be positive
+        if (~(size > 0)) {
+            do Sys.error(5);
+        }
+
         let foundSegment = false;
         let prevSegmentAddr = freeList;
         let segmentAddr = freeList;
 
         // Traverse to find base address for segmentAddr where segmentAddr[0] >= size
         while (~foundSegment & ~(segmentAddr[1] = 0)) {
-            if ((segmentAddr[0] > size) | (segmentAddr[0] = size)) {
+            if (~(segmentAddr[0] < size)) {
                 let foundSegment = true;
             } else {
                 let prevSegmentAddr = segmentAddr;
@@ -58,13 +64,14 @@ class Memory {
         }
 
         // If this is the last segment + size satisfies
-        if ((segmentAddr[1] = 0) & 
-            ((segmentAddr[0] > size) | (segmentAddr[0] = size))) {
+        if ((segmentAddr[1] = 0) & ~(segmentAddr[0] < size)) {
             let foundSegment = true;
         }
 
+        // Heap overflow
+        // TODO: Improve by calling defragmentation
         if (~foundSegment) {
-            // TODO: Scream/or call defragmentation
+            do Sys.error(6);
         }
         
         let blockSizeAddr = segmentAddr + (segmentAddr[0] - size);
