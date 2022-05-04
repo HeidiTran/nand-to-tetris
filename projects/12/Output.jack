@@ -266,33 +266,14 @@ class Output {
         return;
     }
 
-    function int numberOfChars(int val) {
-        var int absVal, cnt, i;
-        if (val = 0) {
-            return 1;
-        }
-
-        let absVal = Math.abs(val);
-        let cnt = 0;
-        let i = 0;
-        while (absVal > 0) {
-            let cnt = cnt + 1;
-            let absVal = absVal/10;
-        }
-
-        if (val < 0) {
-            return cnt + 1;
-        }
-        return cnt;
-    }
-
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
         var String s;
-        var int sLen;
-        let sLen = Output.numberOfChars(i);
-        let s = String.new(sLen);
+        // Longest number is -32767. 
+        // Pros: don't have to compute length of int
+        // Cons: Waste memory space if number use less than 6 slots
+        let s = String.new(6);
         do s.setInt(i);
         do Output.printString(s);
         return;
