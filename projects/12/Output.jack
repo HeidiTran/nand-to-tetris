@@ -23,7 +23,6 @@ class Output {
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
-        do Screen.clearScreen();
         let cursorX = 0;
         let cursorY = 0;
         let cursorR = 0;

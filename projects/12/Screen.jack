@@ -21,7 +21,7 @@ class Screen {
     /** Erases the entire screen. */
     function void clearScreen() {
         let color = false;
-        do drawRectangle(0, 0, 511, 255);
+        do Screen.drawRectangle(0, 0, 511, 255);
         return;
     }
 
