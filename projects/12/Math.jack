@@ -47,6 +47,15 @@ class Math {
     */
    function int multiply(int x, int y) {
       var int res, shiftedX, i;
+
+      if (x = 2) {
+         return y + y;
+      }
+
+      if (y = 2) {
+         return x + x;
+      }
+
       let res = 0;
       let shiftedX = x;
 
@@ -55,7 +64,7 @@ class Math {
          if (Math.bit(y, i)) {
             let res = res + shiftedX;
          }
-         let shiftedX = shiftedX + shiftedX;
+         let shiftedX = shiftedX*2;
          let i = i + 1;
       } 
       return res;
@@ -75,6 +84,12 @@ class Math {
     */
    function int divide(int x, int y) {
       var int absX, absY, q;
+
+      // Division by zero
+      if (y = 0) {
+         do Sys.error(3);
+      }
+
       let absX = Math.abs(x);
       let absY = Math.abs(y);
 
@@ -105,7 +120,6 @@ class Math {
    /** Returns x^k. */
    function int power(int x, int k) {
       if (k = 0) { return 1; }
-
       if (k = 1) { return x; }
 
       if (Math.mod(k, 2) = 0) {
@@ -120,13 +134,18 @@ class Math {
       // for 0 <= x < 2*16
       // By performing a binary search in the range 0...2^(16/2) - 1
       var int y, j, twoToTheJ, y_plus_twoToTheJ_squared;
+
+      // Cannot compute square root of a negative number
+      if (x < 0) {
+         do Sys.error(4);
+      }
+
       let y = 0;
       let j = 8 - 1;
       while (j > -1) {
          let twoToTheJ = Math.power(2, j);
          let y_plus_twoToTheJ_squared = Math.power(y + twoToTheJ, 2);
-         if (((y_plus_twoToTheJ_squared < x) | 
-            (y_plus_twoToTheJ_squared = x)) & (y_plus_twoToTheJ_squared > 0)) {
+         if (~(y_plus_twoToTheJ_squared > x) & (y_plus_twoToTheJ_squared > 0)) {
                let y = y + twoToTheJ;
          }
          let j = j - 1;
