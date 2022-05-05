@@ -223,9 +223,10 @@ class Screen {
     function void drawCircle(int x, int y, int r) {
         var int dy, temp;
         let dy = -r;
-        while (~(dy = r)) {
+        while (dy < 1) {
             let temp = Math.sqrt((r*r)-(dy*dy));
             do Screen.drawHorizontalLine(x - temp, y + dy, 2*temp);
+            do Screen.drawHorizontalLine(x - temp, y - dy, 2*temp);
             let dy = dy + 1;
         }
         return;
