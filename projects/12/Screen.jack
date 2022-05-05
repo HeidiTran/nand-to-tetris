@@ -122,7 +122,7 @@ class Screen {
         let xDivide16 = x/16;
 
         let i = 0;
-        while (i < dy) {
+        while (~(i > dy)) {
             let address = curY + xDivide16;
             if (color) {
                 let screen[address] = screen[address] | mask;   // Draw black
@@ -140,7 +140,7 @@ class Screen {
         let rTimes32 = y * 32;
 
         let i = 0;
-        while (i < dx) {
+        while (~(i > dx)) {
             let curX = x + i;
             if ((dx - i < 16) | ~(Screen.mod(curX, 16) = 0)) {
                 do Screen.drawPixel(curX, y);
