@@ -63,7 +63,7 @@ class Sys {
         var int errStrLen;
         let errStrLen = Sys.numberOfChars(errorCode);
         let errStr = String.new(errStrLen);
-        do String.setInt(errorCode);
+        do errStr.setInt(errorCode);
         do Output.printString("ERR");
         do Output.printString(errStr);
         do Sys.halt();
