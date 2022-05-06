@@ -12,12 +12,51 @@
 class Screen {
     static boolean color;
     static Array screen;
+    static Array twoToThe;
+    static Array endFrag;
 
     /** Initializes the Screen. */
     function void init() {
         let color = true;
         // The screen's contents starts at RAM 16384
         let screen = 16384; 
+
+        let twoToThe = Array.new(16);
+        let twoToThe[0] = 1;
+        let twoToThe[1] = 2;
+        let twoToThe[2] = 4;
+        let twoToThe[3] = 8;
+        let twoToThe[4] = 16;
+        let twoToThe[5] = 32;
+        let twoToThe[6] = 64;
+        let twoToThe[7] = 128;
+        let twoToThe[8] = 256;
+        let twoToThe[9] = 512;
+        let twoToThe[10] = 1024;
+        let twoToThe[11] = 2048;
+        let twoToThe[12] = 4096;
+        let twoToThe[13] = 8192;
+        let twoToThe[14] = 16384;
+        let twoToThe[15] = 32767 + 1;
+
+        let endFrag = Array.new(17);
+        let endFrag[1] = 1;
+        let endFrag[2] = 3;
+        let endFrag[3] = 7;
+        let endFrag[4] = 15;
+        let endFrag[5] = 31;
+        let endFrag[6] = 63;
+        let endFrag[7] = 127;
+        let endFrag[8] = 255;
+        let endFrag[9] = 511;
+        let endFrag[10] = 1023;
+        let endFrag[11] = 2047;
+        let endFrag[12] = 4095;
+        let endFrag[13] = 8191;
+        let endFrag[14] = 16383;
+        let endFrag[15] = 32767;
+        let endFrag[16] = -1;
+
         return;
     }
 
@@ -45,27 +84,21 @@ class Screen {
         return x - (quotient*k);
     }
 
-   /** Returns x^k. */
-   function int power(int x, int k) {
-        if (k = 0) { return 1; }
-        if (k = 1) { return x; }
-
-        if (Screen.mod(k, 2) = 0) {
-            return Screen.power(x*x, k/2);
-        }
-        return x * Screen.power(x*x, k/2);
-   }
-
-    /** Draws the (x,y) pixel, using the current color. */
-    function void drawPixel(int x, int y) {
-        var int address, mask;
-        let address = (32*y) + (x/16);
-        let mask = Screen.power(2, Screen.mod(x, 16));
+    function void setAddrWithMaskColor(int address, int mask) {
         if (color) {
             let screen[address] = screen[address] | mask;   // Draw black
         } else {
             let screen[address] = screen[address] & (~mask);
         }
+        return;
+    }
+
+    /** Draws the (x,y) pixel, using the current color. */
+    function void drawPixel(int x, int y) {
+        var int address, mask;
+        let address = (32*y) + (x/16);
+        let mask = twoToThe[Screen.mod(x, 16)];
+        do Screen.setAddrWithMaskColor(address, mask);
         return;
     }
 
@@ -116,7 +149,7 @@ class Screen {
 
     function void drawVerticalLine(int x, int y, int dy) {
         var int address, mask, xDivide16, curY, i;
-        let mask = Screen.power(2, Screen.mod(x, 16));
+        let mask = twoToThe[Screen.mod(x, 16)];
 
         let curY = 32*y;
         let xDivide16 = x/16;
@@ -124,35 +157,43 @@ class Screen {
         let i = 0;
         while (~(i > dy)) {
             let address = curY + xDivide16;
-            if (color) {
-                let screen[address] = screen[address] | mask;   // Draw black
-            } else {
-                let screen[address] = screen[address] & (~mask);
-            }
+            do Screen.setAddrWithMaskColor(address, mask);
             let curY = curY + 32;   // Go to the next row
             let i = i + 1;
         }
         return;
     }
 
-    function void drawHorizontalLine(int x, int y, int dx) {
-        var int curX, rTimes32, c, i;
+    function void drawHorizontalLine(int x, int y, int targetX) {
+        var int rTimes32, xMod16, c;
         let rTimes32 = y * 32;
+        let c = x/16;
+        let xMod16 = Screen.mod(x, 16);
 
-        let i = 0;
-        while (~(i > dx)) {
-            let curX = x + i;
-            if ((dx - i < 16) | ~(Screen.mod(curX, 16) = 0)) {
-                do Screen.drawPixel(curX, y);
-                let i = i + 1;
-            } else {
-                while (~(dx - i < 16)) {
-                    let c = curX/16;
-                    let screen[rTimes32 + c] = color;
-                    let i = i + 16;
-                    let curX = x + i;
-                }
-            }
+        // In the middle of an address
+        if (((targetX/16)*16) < x) {
+            do Screen.setAddrWithMaskColor(rTimes32 + c, 
+                endFrag[Screen.mod(targetX, 16) + 1] - endFrag[xMod16]);
+            return;
+        }
+
+        // Draw begin fragment
+        if (~(xMod16 = 0)) {
+            do Screen.setAddrWithMaskColor(rTimes32 + c, ~endFrag[xMod16]);
+            let x = x + (16 - xMod16);
+            let c = c + 1;
+        }
+
+        // Draw middle fragement 16 bits/iteration
+        while (~(targetX - x < 16)) {
+            let screen[rTimes32 + c] = color;
+            let x = x + 16;
+            let c = c + 1;
+        }
+
+        // Draw end fragment
+        if (~((targetX - x) < 0)) {
+            do Screen.setAddrWithMaskColor(rTimes32 + c, endFrag[targetX - x + 1]);
         }
         return;
     }
@@ -195,9 +236,9 @@ class Screen {
 
         if (dy = 0) {
             if (dx > 0) {
-                do Screen.drawHorizontalLine(x1, y1, dx);
+                do Screen.drawHorizontalLine(x1, y1, x2);
             } else {
-                do Screen.drawHorizontalLine(x2, y2, -dx);
+                do Screen.drawHorizontalLine(x2, y2, x1);
             }
             return;
         }
@@ -207,13 +248,12 @@ class Screen {
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
-        var int width, height, i;
-        let width = x2 - x1;
+        var int height, i;
         let height = y2 - y1;
 
         let i = 0;
         while (i < height) {
-            do Screen.drawHorizontalLine(x1, y1 + i, width);
+            do Screen.drawHorizontalLine(x1, y1 + i, x2);
             let i = i + 1;
         }
         return;
@@ -226,8 +266,8 @@ class Screen {
         let r = r*r;
         while (dy < 1) {
             let temp = Math.sqrt(r - (dy*dy));
-            do Screen.drawHorizontalLine(x - temp, y + dy, 2*temp);
-            do Screen.drawHorizontalLine(x - temp, y - dy, 2*temp);
+            do Screen.drawHorizontalLine(x - temp, y + dy, x + temp);
+            do Screen.drawHorizontalLine(x - temp, y - dy, x + temp);
             let dy = dy + 1;
         }
         return;
