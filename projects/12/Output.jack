@@ -19,7 +19,7 @@ class Output {
     // Character map for displaying characters
     static Array charMaps; 
     static int cursorX, cursorY, cursorC, cursorR;
-    static Array twoToThe;
+    static Array screen;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
@@ -29,24 +29,8 @@ class Output {
         let cursorC = 0;
         
         do Output.initMap();
-
-        let twoToThe = Array.new(16);
-        let twoToThe[0] = 1;
-        let twoToThe[1] = 2;
-        let twoToThe[2] = 4;
-        let twoToThe[3] = 8;
-        let twoToThe[4] = 16;
-        let twoToThe[5] = 32;
-        let twoToThe[6] = 64;
-        let twoToThe[7] = 128;
-        let twoToThe[8] = 256;
-        let twoToThe[9] = 512;
-        let twoToThe[10] = 1024;
-        let twoToThe[11] = 2048;
-        let twoToThe[12] = 4096;
-        let twoToThe[13] = 8192;
-        let twoToThe[14] = 16384;
-        let twoToThe[15] = 32767 + 1;
+        // The screen's contents starts at RAM 16384
+        let screen = 16384; 
         return;
     }
 
@@ -216,36 +200,47 @@ class Output {
         return;
     }
 
-    /** Returns true if the j-th bit of the integer x is 1
-    and false otherwise. */
-    function boolean bit(int x, int j) {
-        var int mask;
-        let mask = twoToThe[j];
+    function int mod(int x, int k) {
+        var int quotient;
+        let quotient = x/k;
+        return x - (quotient*k);
+    }
 
-        if (~((x & mask) = 0)) {
-            return true;
+    function void printCharBegin(Array cMap, int addr) {
+        var int i;
+        let i = 0;
+        while (i < 11) {
+            let screen[addr] = screen[addr] | cMap[i];
+            let i = i + 1;
+            let addr = addr + 32;
         }
-        return false;
+        return;
+    }
+
+    function void printCharEnd(Array cMap, int addr) {
+        var int i;
+        let i = 0;
+        while (i < 11) {
+            let screen[addr] = screen[addr] | (cMap[i] * 256);
+            let i = i + 1;
+            let addr = addr + 32;
+        }
+        return;
     }
 
     /** Displays the given character at the cursor location,
      *  and advances the cursor one column forward. */
     function void printChar(char c) {
         var Array map;
-        var int num, i, j;
+        var int addr;
+
+        let addr = (cursorY*32) + (cursorX/16);
 
         let map = Output.getMap(c);
-        let i = 0;
-        while (i < 11) {
-            let num = map[i];
-            let j = 0;
-            while (j < 8) {
-                if (Output.bit(num, j)) {
-                    do Screen.drawPixel(cursorX + j, cursorY + i);
-                }
-                let j = j + 1;
-            }
-            let i = i + 1;
+        if (Output.mod(cursorX, 16) = 0) {
+            do Output.printCharBegin(map, addr);
+        } else {
+            do Output.printCharEnd(map, addr);
         }
 
         do Output.moveCursor(cursorR, cursorC + 1);
@@ -255,13 +250,42 @@ class Output {
     /** displays the given string starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printString(String s) {
-        var int sLen, i;
+        var Array map;
+        var int sLen, addr, i;
         let sLen = s.length();
+        let addr = (cursorY*32) + (cursorX/16);
 
         let i = 0;
-        while (i < sLen) {
-            do Output.printChar(s.charAt(i));
-            let i = i + 1;
+        if (Output.mod(cursorX, 16) = 0) {
+            while (i < sLen) {
+                let map = Output.getMap(s.charAt(i));
+                do Output.printCharBegin(map, addr);
+                do Output.moveCursor(cursorR, cursorC + 1);
+                let i = i + 1;
+
+                if (i < sLen) {
+                    let map = Output.getMap(s.charAt(i));
+                    do Output.printCharEnd(map, addr);
+                    do Output.moveCursor(cursorR, cursorC + 1);
+                    let addr = addr + 1;
+                    let i = i + 1;
+                }
+            }
+        } else {
+            while (i < sLen) {
+                let map = Output.getMap(s.charAt(i));
+                do Output.printCharEnd(map, addr);
+                do Output.moveCursor(cursorR, cursorC + 1);
+                let addr = addr + 1;
+                let i = i + 1;
+
+                if (i < sLen) {
+                    let map = Output.getMap(s.charAt(i));
+                    do Output.printCharBegin(map, addr);
+                    do Output.moveCursor(cursorR, cursorC + 1);
+                    let i = i + 1;
+                }
+            }
         }
         return;
     }
