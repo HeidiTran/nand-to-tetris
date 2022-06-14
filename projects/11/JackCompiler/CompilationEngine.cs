@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using static JackCompiler.TokenType;
+using static JackCompiler.Keyword;
 
 /// <summary>
 /// Generates the compiler's output
@@ -18,9 +19,9 @@ namespace JackCompiler
 
 		private static readonly HashSet<Keyword> _subroutineKws = new()
 		{
-			Keyword.CONSTRUCTOR,
-			Keyword.FUNCTION,
-			Keyword.METHOD
+			CONSTRUCTOR,
+			FUNCTION,
+			METHOD
 		};
 
 		private static readonly Dictionary<Kind, Segment> _kindToSegment = new()
@@ -59,7 +60,7 @@ namespace JackCompiler
 				CompileClassVarDec();
 			}
 
-			while (_tokenizer.GetTokenType() == TokenType.KEYWORD &&
+			while (_tokenizer.GetTokenType() == KEYWORD &&
 				_subroutineKws.Contains(_tokenizer.GetKeyWord()))
 			{
 				CompileSubroutineDec();
@@ -108,18 +109,18 @@ namespace JackCompiler
 
 			// subroutineDec: ('constructor' | 'function' | 'method') ('void' | type) subroutineName '(' parameterList ')' subroutineBody
 			Keyword keyword = _tokenizer.GetKeyWord();  // 'constructor' | 'function' | 'method'
-			if (keyword == Keyword.METHOD)
+			if (keyword == METHOD)
 			{
 				_symbolTable.Define("this", _currentClassName, Kind.ARG);
 			}
 			MustHaveMoreTokens();
 
 			TokenType tokenType = _tokenizer.GetTokenType();
-			bool isBoolOrIntOrChar = tokenType == TokenType.KEYWORD &&
+			bool isBoolOrIntOrChar = tokenType == KEYWORD &&
 				_varTypes.Contains(_tokenizer.GetKeyWord());
-			bool isVoid = tokenType == TokenType.KEYWORD &&
-				_tokenizer.GetKeyWord() == Keyword.VOID;
-			if (!(tokenType == TokenType.IDENTIFIER || isBoolOrIntOrChar || isVoid))
+			bool isVoid = tokenType == KEYWORD &&
+				_tokenizer.GetKeyWord() == VOID;
+			if (!(tokenType == IDENTIFIER || isBoolOrIntOrChar || isVoid))
 			{
 				throw new Exception("Expect a type. Found: " + _tokenizer.GetCurrentToken());
 			}
@@ -173,14 +174,14 @@ namespace JackCompiler
 
 			_vmWriter.WriteFunction($"{_currentClassName}.{subroutineName}", _symbolTable.VarCount(Kind.VAR));
 
-			if (keyword == Keyword.CONSTRUCTOR)
+			if (keyword == CONSTRUCTOR)
 			{
 				_vmWriter.WritePush(Segment.CONSTANT,
 					_symbolTable.VarCount(Kind.FIELD)); // size of obj of this class
 				_vmWriter.WriteCall("Memory.alloc", 1);
 				_vmWriter.WritePop(Segment.POINTER, 0); // anchor this at the base address
 			}
-			else if (keyword == Keyword.METHOD)
+			else if (keyword == METHOD)
 			{
 				_vmWriter.WritePush(Segment.ARGUMENT, 0);   // Map to this
 				_vmWriter.WritePop(Segment.POINTER, 0);     // Set this pointer to the addr of current obj
@@ -224,11 +225,11 @@ namespace JackCompiler
 
 		private static readonly HashSet<Keyword> _statementTypes = new()
 		{
-			Keyword.LET,
-			Keyword.IF,
-			Keyword.WHILE,
-			Keyword.DO,
-			Keyword.RETURN
+			LET,
+			IF,
+			WHILE,
+			DO,
+			RETURN
 		};
 
 		/// <summary>
@@ -237,24 +238,24 @@ namespace JackCompiler
 		public void CompileStatements()
 		{
 			// statments: statement*
-			while (_tokenizer.GetTokenType() == TokenType.KEYWORD &&
+			while (_tokenizer.GetTokenType() == KEYWORD &&
 				_statementTypes.Contains(_tokenizer.GetKeyWord()))
 			{
 				switch (_tokenizer.GetKeyWord())
 				{
-					case Keyword.LET:
+					case LET:
 						CompileLet();
 						break;
-					case Keyword.DO:
+					case DO:
 						CompileDo();
 						break;
-					case Keyword.IF:
+					case IF:
 						CompileIf();
 						break;
-					case Keyword.WHILE:
+					case WHILE:
 						CompileWhile();
 						break;
-					case Keyword.RETURN:
+					case RETURN:
 						CompileReturn();
 						break;
 					default:
@@ -494,7 +495,7 @@ namespace JackCompiler
 			// expression: term (op term)*
 			CompileTerm();
 			MustHaveMoreTokens();
-			while (_tokenizer.GetTokenType() == TokenType.SYMBOL &&
+			while (_tokenizer.GetTokenType() == SYMBOL &&
 				_ops.Contains(_tokenizer.GetSymbol()))
 			{
 				char op = _tokenizer.GetSymbol();
@@ -530,11 +531,11 @@ namespace JackCompiler
 		public void CompileTerm()
 		{
 			TokenType tokenType = _tokenizer.GetTokenType();
-			if (tokenType == TokenType.INT_CONST)
+			if (tokenType == INT_CONST)
 			{
 				_vmWriter.WritePush(Segment.CONSTANT, _tokenizer.GetIntVal());
 			}
-			else if (tokenType == TokenType.STRING_CONST)
+			else if (tokenType == STRING_CONST)
 			{
 				string s = _tokenizer.GetStringVal();
 				_vmWriter.WritePush(Segment.CONSTANT, s.Length);
@@ -545,19 +546,19 @@ namespace JackCompiler
 					_vmWriter.WriteCall("String.appendChar", 2);
 				}
 			}
-			else if (tokenType == TokenType.KEYWORD)
+			else if (tokenType == KEYWORD)
 			{
 				Keyword keyword = _tokenizer.GetKeyWord();
-				if (keyword == Keyword.FALSE || keyword == Keyword.NULL)
+				if (keyword == FALSE || keyword == NULL)
 				{
 					_vmWriter.WritePush(Segment.CONSTANT, 0);
 				}
-				else if (keyword == Keyword.TRUE)
+				else if (keyword == TRUE)
 				{
 					_vmWriter.WritePush(Segment.CONSTANT, 0);
 					_vmWriter.WriteArithmetic(Command.NOT);
 				}
-				else if (keyword == Keyword.THIS)
+				else if (keyword == THIS)
 				{
 					_vmWriter.WritePush(Segment.POINTER, 0);    // THIS is stored at pointer 0
 				} else
@@ -565,7 +566,7 @@ namespace JackCompiler
 					throw new Exception("Expect a keyword constant true/false/null/this. Found: " + _tokenizer.GetCurrentToken());
 				}
 			}
-			else if (tokenType == TokenType.IDENTIFIER)
+			else if (tokenType == IDENTIFIER)
 			{
 				if (!_tokenizer.HasMoreTokens())
 				{
@@ -601,7 +602,7 @@ namespace JackCompiler
 					_vmWriter.WritePush(_kindToSegment[kind], idx);
 				}
 			}
-			else if (tokenType == TokenType.SYMBOL)
+			else if (tokenType == SYMBOL)
 			{
 				char symbol = _tokenizer.GetSymbol();
 				if (symbol == '(')
@@ -665,7 +666,7 @@ namespace JackCompiler
 
 		private string CompileNameAndReturn()
 		{
-			if (_tokenizer.GetTokenType() == TokenType.IDENTIFIER)
+			if (_tokenizer.GetTokenType() == IDENTIFIER)
 			{
 				string name = _tokenizer.GetIdentifier();
 				MustHaveMoreTokens();
@@ -679,15 +680,15 @@ namespace JackCompiler
 
 		private static readonly HashSet<Keyword> _varTypes = new()
 		{
-			Keyword.BOOLEAN,
-			Keyword.INT,
-			Keyword.CHAR
+			BOOLEAN,
+			INT,
+			CHAR
 		};
 
 		private void Eat(string expectedToken)
 		{
 			TokenType tokenType = _tokenizer.GetTokenType();
-			if (tokenType == TokenType.SYMBOL)
+			if (tokenType == SYMBOL)
 			{
 				string symbol = _tokenizer.GetSymbol().ToString();
 				if (symbol != expectedToken)
@@ -696,7 +697,7 @@ namespace JackCompiler
 				}
 
 			}
-			else if (tokenType == TokenType.KEYWORD)
+			else if (tokenType == KEYWORD)
 			{
 				string kw = _tokenizer.GetKeyWord().ToString().ToLower();
 				if (kw != expectedToken)
@@ -706,19 +707,19 @@ namespace JackCompiler
 			}
 			else
 			{
-				throw new Exception("Expected Symbol or Keyword. Found: " + tokenType.ToString());
+				throw new Exception("Expected Symbol or  Found: " + tokenType.ToString());
 			}
 		}
 
 		private bool IsSymbol(char symbol)
 		{
-			return _tokenizer.GetTokenType() == TokenType.SYMBOL &&
+			return _tokenizer.GetTokenType() == SYMBOL &&
 				_tokenizer.GetSymbol() == symbol;
 		}
 
 		private bool IsKeyword(string kw)
 		{
-			return _tokenizer.GetTokenType() == TokenType.KEYWORD &&
+			return _tokenizer.GetTokenType() == KEYWORD &&
 				_tokenizer.GetKeyWord().ToString().ToLower() == kw;
 		}
 
@@ -726,11 +727,11 @@ namespace JackCompiler
 		{
 			string type;
 			TokenType tokenType = _tokenizer.GetTokenType();
-			if (tokenType == TokenType.IDENTIFIER)
+			if (tokenType == IDENTIFIER)
 			{
 				type = _tokenizer.GetIdentifier();
 			}
-			else if (tokenType == TokenType.KEYWORD && _varTypes.Contains(_tokenizer.GetKeyWord()))
+			else if (tokenType == KEYWORD && _varTypes.Contains(_tokenizer.GetKeyWord()))
 			{
 				type = _tokenizer.GetKeyWord().ToString();
 			}

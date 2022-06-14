@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static JackCompiler.Kind;
 
 namespace JackCompiler
 {
@@ -15,8 +16,8 @@ namespace JackCompiler
 	/// </summary>
 	class SymbolTable
 	{
-		private Dictionary<string, Tuple<string, Kind, int>> _classST;
-		private Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
+		private readonly Dictionary<string, Tuple<string, Kind, int>> _classST;
+		private readonly Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
 
 		public SymbolTable()
 		{
@@ -103,7 +104,7 @@ namespace JackCompiler
 				return _classST[name].Item2;
 			}
 
-			return Kind.NONE;
+			return NONE;
 		}
 
 		/// <summary>
@@ -147,12 +148,12 @@ namespace JackCompiler
 
 		private static bool IsClassScope(Kind kind)
 		{
-			return kind == Kind.STATIC || kind == Kind.FIELD;
+			return kind == STATIC || kind == FIELD;
 		}
 
 		private static bool IsSubroutineScope(Kind kind)
 		{
-			return kind == Kind.ARG || kind == Kind.VAR;
+			return kind == ARG || kind == VAR;
 		}
 	}
 }
