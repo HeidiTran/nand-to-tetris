@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using static JackCompiler.TokenType;
 
 /// <summary>
 /// Ignores all comments and white space in the input stream, and serializes it into Jack-language tokens.
@@ -137,10 +138,7 @@ namespace JackCompiler
 		/// Should only be called when HasMoreTokens() return true
 		/// </summary>
 		/// <returns>The next character</returns>
-		public char LookOneCharAhead()
-		{
-			return (char)_streamReader.Peek();
-		}
+		public char LookOneCharAhead() => (char)_streamReader.Peek();
 
 		private void IgnoreWhiteSpaceAndNewLine()
 		{
@@ -152,10 +150,8 @@ namespace JackCompiler
 			}
 		}
 
-		private static bool IsIgnoredTok(char token)
-		{
-			return token == ' ' || token == '\n' || token == '\t' || token == '\r';
-		}
+		private static bool IsIgnoredTok(char token) 
+			=> token == ' ' || token == '\n' || token == '\t' || token == '\r';
 
 		private void IgnoreComment(char typeOfComment)
 		{
@@ -182,7 +178,8 @@ namespace JackCompiler
 		{
 			List<char> res = new() { firstToken };
 			int nextToken = _streamReader.Peek();
-			while (nextToken != -1 && short.TryParse(((char)nextToken).ToString(), out _))
+			while (nextToken != -1 && 
+				short.TryParse(((char)nextToken).ToString(), out _))
 			{
 				res.Add((char)_streamReader.Read());
 				nextToken = _streamReader.Peek();
@@ -207,7 +204,8 @@ namespace JackCompiler
 		{
 			List<char> res = new() { firstToken };
 			int nextToken = _streamReader.Peek();
-			while (nextToken != -1 && !IsIgnoredTok((char)nextToken) && !_symbols.Contains(((char)nextToken).ToString()))
+			while (nextToken != -1 && !IsIgnoredTok((char)nextToken) 
+				&& !_symbols.Contains(((char)nextToken).ToString()))
 			{
 				res.Add((char)_streamReader.Read());
 				nextToken = _streamReader.Peek();
@@ -222,22 +220,22 @@ namespace JackCompiler
 		{
 			if (_symbols.Contains(_currentToken))
 			{
-				return TokenType.SYMBOL;
+				return SYMBOL;
 			}
 			else if (double.TryParse(_currentToken, out double num) && num >= 0 && num <= short.MaxValue)
 			{
-				return TokenType.INT_CONST;
+				return INT_CONST;
 			}
 			else if (_keywords.Contains(_currentToken))
 			{
-				return TokenType.KEYWORD;
+				return KEYWORD;
 			}
 			else if (_currentToken.StartsWith("\"") && _currentToken.EndsWith("\""))
 			{
 				// TODO: Check that the inner text is a unicode char + not including double quote + not including newline
-				return TokenType.STRING_CONST;
+				return STRING_CONST;
 			}
-			return TokenType.IDENTIFIER;
+			return IDENTIFIER;
 		}
 
 		/// <summary>
@@ -248,7 +246,7 @@ namespace JackCompiler
 		/// <returns></returns>
 		public Keyword GetKeyWord()
 		{
-			if (GetTokenType() != TokenType.KEYWORD)
+			if (GetTokenType() != KEYWORD)
 			{
 				throw new Exception("GetKeyWord should be called only if `GetTokenType` is KEYWORD!");
 			}
@@ -262,7 +260,7 @@ namespace JackCompiler
 		/// </summary>
 		public char GetSymbol()
 		{
-			if (GetTokenType() != TokenType.SYMBOL)
+			if (GetTokenType() != SYMBOL)
 			{
 				throw new Exception("GetSymbol should be called only if `GetTokenType` is SYMBOL!");
 			}
@@ -275,7 +273,7 @@ namespace JackCompiler
 		/// </summary>
 		public string GetIdentifier()
 		{
-			if (GetTokenType() != TokenType.IDENTIFIER)
+			if (GetTokenType() != IDENTIFIER)
 			{
 				throw new Exception("GetIdentifier should be called only if `GetTokenType` is IDENTIFIER!");
 			}
@@ -287,7 +285,7 @@ namespace JackCompiler
 		/// </summary>
 		public int GetIntVal()
 		{
-			if (GetTokenType() != TokenType.INT_CONST)
+			if (GetTokenType() != INT_CONST)
 			{
 				throw new Exception("GetIntVal should be called only if `GetTokenType` is INT_CONST!");
 			}
@@ -300,21 +298,15 @@ namespace JackCompiler
 		/// </summary>
 		public string GetStringVal()
 		{
-			if (GetTokenType() != TokenType.STRING_CONST)
+			if (GetTokenType() != STRING_CONST)
 			{
 				throw new Exception("GetStringVal should be called only if `GetTokenType` is STRING_CONST!");
 			}
 			return _currentToken[1..^1];
 		}
 
-		public string GetCurrentToken()
-		{
-			return _currentToken;
-		}
+		public string GetCurrentToken() => _currentToken;
 
-		public void Close()
-		{
-			_streamReader.Close();
-		}
+		public void Close() => _streamReader.Close();
 	}
 }

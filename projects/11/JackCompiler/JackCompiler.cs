@@ -2,7 +2,7 @@
 
 namespace JackCompiler
 {
-	class JackCompiler 
+	class JackCompiler
 	{
 		static void Main(string[] args)
 		{
@@ -11,7 +11,7 @@ namespace JackCompiler
 			// string inputPath = args[0];
 
 			// For debugging in VisualStudio
-			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\Square";
+			string inputPath = @"C:\Projects\nand-to-tetris\projects\11\Pong";
 
 			bool isDir = Directory.Exists(inputPath);
 			if (!isDir)

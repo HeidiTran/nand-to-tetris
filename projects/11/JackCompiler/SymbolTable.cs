@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using static JackCompiler.Kind;
 
 namespace JackCompiler
@@ -16,22 +17,13 @@ namespace JackCompiler
 	/// </summary>
 	class SymbolTable
 	{
-		private readonly Dictionary<string, Tuple<string, Kind, int>> _classST;
-		private readonly Dictionary<string, Tuple<string, Kind, int>> _subroutineST;
-
-		public SymbolTable()
-		{
-			_classST = new();
-			_subroutineST = new();
-		}
+		private readonly Dictionary<string, Tuple<string, Kind, int>> _classST = new();
+		private readonly Dictionary<string, Tuple<string, Kind, int>> _subroutineST = new();
 
 		/// <summary>
 		/// Starts a new subroutine scope (i.e. resets the subroutine's symbol table)
 		/// </summary>
-		public void StartSubroutine()
-		{
-			_subroutineST.Clear();
-		}
+		public void StartSubroutine() => _subroutineST.Clear();
 
 		/// <summary>
 		/// Defines a new identifier and assigns it a running index
@@ -62,32 +54,17 @@ namespace JackCompiler
 		/// </summary>
 		public int VarCount(Kind kind)
 		{
-			int res = 0;
 			if (IsClassScope(kind))
 			{
-				foreach (var row in _classST)
-				{
-					if (row.Value.Item2 == kind)
-					{
-						res++;
-					}
-				}
+				return _classST.Where(row => row.Value.Item2 == kind).Count();
 			}
-			else if (IsSubroutineScope(kind))
+			
+			if (IsSubroutineScope(kind))
 			{
-				foreach (var row in _subroutineST)
-				{
-					if (row.Value.Item2 == kind)
-					{
-						res++;
-					}
-				}
+				return _subroutineST.Where(row => row.Value.Item2 == kind).Count();
 			}
-			else
-			{
-				throw new Exception("NONE is not a valid kind");
-			}
-			return res;
+
+			throw new Exception("NONE is not a valid kind");
 		}
 
 		/// <summary>
@@ -96,12 +73,14 @@ namespace JackCompiler
 		/// </summary>
 		public Kind KindOf(string name)
 		{
-			if (_subroutineST.ContainsKey(name))
+			if (_subroutineST.TryGetValue(name, out var subroutinVar))
 			{
-				return _subroutineST[name].Item2;
-			} else if (_classST.ContainsKey(name))
+				return subroutinVar.Item2;
+			}
+
+			if (_classST.TryGetValue(name, out var classVar))
 			{
-				return _classST[name].Item2;
+				return classVar.Item2;
 			}
 
 			return NONE;
@@ -112,13 +91,14 @@ namespace JackCompiler
 		/// </summary>
 		public string TypeOf(string name)
 		{
-			if (_subroutineST.ContainsKey(name))
+			if (_subroutineST.TryGetValue(name, out var subroutinVar))
 			{
-				return _subroutineST[name].Item1;
+				return subroutinVar.Item1;
 			}
-			else if (_classST.ContainsKey(name))
+
+			if (_classST.TryGetValue(name, out var classVar))
 			{
-				return _classST[name].Item1;
+				return classVar.Item1;
 			}
 
 			return string.Empty;
@@ -129,31 +109,24 @@ namespace JackCompiler
 		/// </summary>
 		public int IndexOf(string name)
 		{
-			if (_subroutineST.ContainsKey(name))
+			if (_subroutineST.TryGetValue(name, out var subroutinVar))
 			{
-				return _subroutineST[name].Item3;
+				return subroutinVar.Item3;
 			}
-			else if (_classST.ContainsKey(name))
+
+			if (_classST.TryGetValue(name, out var classVar))
 			{
-				return _classST[name].Item3;
+				return classVar.Item3;
 			}
 
 			return 0;
 		}
 
-		public bool IsInSymbolTable(string name)
-		{
-			return _subroutineST.ContainsKey(name) || _classST.ContainsKey(name);
-		}
+		public bool IsInSymbolTable(string name) 
+			=> _subroutineST.ContainsKey(name) || _classST.ContainsKey(name);
 
-		private static bool IsClassScope(Kind kind)
-		{
-			return kind == STATIC || kind == FIELD;
-		}
+		private static bool IsClassScope(Kind kind) => kind == STATIC || kind == FIELD;
 
-		private static bool IsSubroutineScope(Kind kind)
-		{
-			return kind == ARG || kind == VAR;
-		}
+		private static bool IsSubroutineScope(Kind kind) => kind == ARG || kind == VAR;
 	}
 }

@@ -563,7 +563,9 @@ namespace JackCompiler
 					_vmWriter.WritePush(Segment.POINTER, 0);    // THIS is stored at pointer 0
 				} else
 				{
-					throw new Exception("Expect a keyword constant true/false/null/this. Found: " + _tokenizer.GetCurrentToken());
+					throw new Exception(
+						$"Expect a keyword constant true/false/null/this. " +
+						$"Found: {_tokenizer.GetCurrentToken()}");
 				}
 			}
 			else if (tokenType == IDENTIFIER)
@@ -616,7 +618,7 @@ namespace JackCompiler
 				{
 					MustHaveMoreTokens();
 					CompileTerm();
-					if (symbol == '-')
+					if (symbol == '-') 
 					{
 						_vmWriter.WriteArithmetic(Command.NEG);
 					}
@@ -627,12 +629,12 @@ namespace JackCompiler
 				}
 				else
 				{
-					throw new Exception("Illegal symbol. Found: " + _tokenizer.GetCurrentToken());
+					throw new Exception($"Illegal symbol. Found: {_tokenizer.GetCurrentToken()}");
 				}
 			}
 			else
 			{
-				throw new Exception("Unknown term structure. Found: " + _tokenizer.GetCurrentToken());
+				throw new Exception($"Unknown term structure. Found: { _tokenizer.GetCurrentToken()}");
 			}
 		}
 
@@ -659,10 +661,7 @@ namespace JackCompiler
 			return nArgs;
 		}
 
-		public void Close()
-		{
-			_vmWriter.Close();
-		}
+		public void Close() => _vmWriter.Close();
 
 		private string CompileNameAndReturn()
 		{
@@ -674,7 +673,7 @@ namespace JackCompiler
 			}
 			else
 			{
-				throw new Exception("Expect a name. Found: " + _tokenizer.GetCurrentToken());
+				throw new Exception($"Expect a name. Found: {_tokenizer.GetCurrentToken()}");
 			}
 		}
 
@@ -693,7 +692,7 @@ namespace JackCompiler
 				string symbol = _tokenizer.GetSymbol().ToString();
 				if (symbol != expectedToken)
 				{
-					throw new Exception("Exptected: " + expectedToken + " Found: " + symbol);
+					throw new Exception($"Exptected: {expectedToken} Found: {symbol}");
 				}
 
 			}
@@ -702,26 +701,22 @@ namespace JackCompiler
 				string kw = _tokenizer.GetKeyWord().ToString().ToLower();
 				if (kw != expectedToken)
 				{
-					throw new Exception("Exptected: " + expectedToken + " Found: " + kw);
+					throw new Exception($"Exptected: {expectedToken} Found: {kw}");
 				}
 			}
 			else
 			{
-				throw new Exception("Expected Symbol or  Found: " + tokenType.ToString());
+				throw new Exception($"Expected Symbol or Keyword. Found: {tokenType}");
 			}
 		}
 
-		private bool IsSymbol(char symbol)
-		{
-			return _tokenizer.GetTokenType() == SYMBOL &&
-				_tokenizer.GetSymbol() == symbol;
-		}
+		private bool IsSymbol(char symbol) 
+			=> _tokenizer.GetTokenType() == SYMBOL 
+			&& _tokenizer.GetSymbol() == symbol;
 
-		private bool IsKeyword(string kw)
-		{
-			return _tokenizer.GetTokenType() == KEYWORD &&
-				_tokenizer.GetKeyWord().ToString().ToLower() == kw;
-		}
+		private bool IsKeyword(string kw) => 
+			_tokenizer.GetTokenType() == KEYWORD &&
+			_tokenizer.GetKeyWord().ToString().ToLower() == kw;
 
 		private string CompileTypeAndReturn()
 		{
